@@ -13,6 +13,7 @@ import SetupComplete from "./pages/onboarding/SetupComplete";
 import DiningContext from "./pages/onboarding/DiningContext";
 import Priority from "./pages/onboarding/Priority";
 import Constraints from "./pages/onboarding/Constraints";
+import CookAtHome from "./pages/onboarding/CookAtHome";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/onboarding/context" element={<DiningContext />} />
           <Route path="/onboarding/priority" element={<Priority />} />
           <Route path="/onboarding/constraints" element={<Constraints />} />
+          <Route path="/onboarding/cook-at-home" element={<CookAtHome />} />
           <Route path="/home" element={<Home />} />
           <Route path="/discover" element={<Discover />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

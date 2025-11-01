@@ -29,10 +29,12 @@ const DiningContext = () => {
 
   const handleSelect = (contextId: string) => {
     localStorage.setItem("diningContext", contextId);
-    if (contextId === "casual") {
+    if (contextId === "home") {
+      navigate("/onboarding/cook-at-home");
+    } else if (contextId === "casual") {
       navigate("/onboarding/priority");
     } else {
-      // For now, only casual is implemented
+      // For now, only home and casual are implemented
       navigate("/onboarding/priority");
     }
   };
