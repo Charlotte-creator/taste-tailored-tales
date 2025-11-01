@@ -55,7 +55,7 @@ const Home = () => {
   const [likedRecipes, setLikedRecipes] = useState<any[]>([]);
   const [mealHistory, setMealHistory] = useState<any[]>([]);
   const [cookedRecipeId, setCookedRecipeId] = useState<string | null>(null);
-  const [expenseInput, setExpenseInput] = useState("");
+  const [expenseInputs, setExpenseInputs] = useState<Record<string, string>>({});
   const [stats, setStats] = useState({
     homecookCount: 0,
     dineoutCount: 0,
@@ -111,7 +111,8 @@ const Home = () => {
       } else {
         // Not logged in: show locally saved liked recipes, no meal history
         const localLiked = JSON.parse(localStorage.getItem('likedRecipes') || '[]');
-        const mapped = localLiked.map((r: any) => ({
+        const mapped = localLiked.map((r: any, idx: number) => ({
+          id: `local-${idx}`,
           recipe_name: r.name,
           ingredients: r.ingredients,
           instructions: r.instructions,
@@ -132,8 +133,9 @@ const Home = () => {
     navigate("/onboarding/context");
   };
 
-  const handleMarkAsCooked = async (recipe: any) => {
-    if (!expenseInput || parseFloat(expenseInput) <= 0) {
+  const handleMarkAsCooked = async (recipeId: string) => {
+    const expense = expenseInputs[recipeId];
+    if (!expense || parseFloat(expense) <= 0) {
       toast.error("Please enter a valid expense amount");
       return;
     }
@@ -145,16 +147,22 @@ const Home = () => {
         toast.info("Log in to track expenses in your dashboard");
         return;
       }
+      
+      const recipe = likedRecipes.find(r => r.id === recipeId);
       await supabase.from('meal_history').insert({
         user_id: userId,
         meal_type: 'homecook',
-        meal_name: recipe.recipe_name,
-        expense: parseFloat(expenseInput)
+        meal_name: recipe?.recipe_name,
+        expense: parseFloat(expense)
       });
 
       toast.success("Meal tracked successfully!");
       setCookedRecipeId(null);
-      setExpenseInput("");
+      setExpenseInputs(prev => {
+        const copy = { ...prev };
+        delete copy[recipeId];
+        return copy;
+      });
       
       // Refresh data
       const { data: history } = await supabase
@@ -350,66 +358,85 @@ const Home = () => {
                   Liked Recipes
                 </h3>
                 <div className="grid gap-4">
-                  {likedRecipes.map((recipe, index) => (
-                    <Card key={index} className="p-6">
-                      <div className="flex justify-between items-start mb-3">
-                        <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
-                          {recipe.recipe_name}
-                        </h4>
-                        <Heart className="w-5 h-5 text-red-500 fill-current" />
-                      </div>
-                      <div className="space-y-3">
-                        <p className="text-sm text-foreground/70">
-                          <span className="font-semibold">{recipe.ingredients.length}</span> ingredients
-                        </p>
-                        {recipe.missing_ingredients && recipe.missing_ingredients.length > 0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {recipe.missing_ingredients.length} missing
-                          </Badge>
-                        )}
-                        
-                        {cookedRecipeId === recipe.id ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="number"
-                              placeholder="Cost ($)"
-                              value={expenseInput}
-                              onChange={(e) => setExpenseInput(e.target.value)}
-                              className="flex-1 px-3 py-2 text-sm border rounded-md"
-                              step="0.01"
-                              min="0"
-                            />
-                            <Button
-                              size="sm"
-                              onClick={() => handleMarkAsCooked(recipe)}
-                            >
-                              Save
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setCookedRecipeId(null);
-                                setExpenseInput("");
-                              }}
-                            >
-                              Cancel
-                            </Button>
+                  {likedRecipes.map((recipe, index) => {
+                    const recipeImage = `https://images.unsplash.com/photo-${1556909212 + index * 1000}?w=400&h=300&fit=crop`;
+                    return (
+                      <Card key={recipe.id || index} className="overflow-hidden">
+                        <div className="relative h-32">
+                          <img
+                            src={recipeImage}
+                            alt={recipe.recipe_name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-6">
+                          <div className="flex justify-between items-start mb-3">
+                            <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
+                              {recipe.recipe_name}
+                            </h4>
+                            <Heart className="w-5 h-5 text-red-500 fill-current" />
                           </div>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full"
-                            onClick={() => setCookedRecipeId(recipe.id)}
-                          >
-                            <ChefHat className="w-4 h-4 mr-2" />
-                            Mark as Cooked
-                          </Button>
-                        )}
-                      </div>
-                    </Card>
-                  ))}
+                          <div className="space-y-3">
+                            <p className="text-sm text-foreground/70">
+                              <span className="font-semibold">{recipe.ingredients.length}</span> ingredients
+                            </p>
+                            {recipe.missing_ingredients && recipe.missing_ingredients.length > 0 && (
+                              <Badge variant="outline" className="text-xs">
+                                {recipe.missing_ingredients.length} missing
+                              </Badge>
+                            )}
+                            
+                            {cookedRecipeId === recipe.id ? (
+                              <div className="flex gap-2">
+                                <input
+                                  type="number"
+                                  placeholder="Cost ($)"
+                                  value={expenseInputs[recipe.id] || ""}
+                                  onChange={(e) => setExpenseInputs(prev => ({
+                                    ...prev,
+                                    [recipe.id]: e.target.value
+                                  }))}
+                                  className="flex-1 px-3 py-2 text-sm border rounded-md"
+                                  step="0.01"
+                                  min="0"
+                                />
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleMarkAsCooked(recipe.id)}
+                                >
+                                  Save
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setCookedRecipeId(null);
+                                    setExpenseInputs(prev => {
+                                      const copy = { ...prev };
+                                      delete copy[recipe.id];
+                                      return copy;
+                                    });
+                                  }}
+                                >
+                                  Cancel
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setCookedRecipeId(recipe.id)}
+                              >
+                                <ChefHat className="w-4 h-4 mr-2" />
+                                Mark as Cooked
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
             )}
