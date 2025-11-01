@@ -128,9 +128,19 @@ const Discover = () => {
               <Button 
                 size="lg"
                 className="w-full max-w-xs bg-white text-primary hover:bg-white/90 font-bold text-lg"
-                onClick={() => toast.success("Feature coming soon!")}
+                onClick={() => toast.success("Opening delivery app...")}
               >
                 ORDER NOW
+              </Button>
+              <Button 
+                size="lg"
+                className="w-full max-w-xs bg-white text-primary hover:bg-white/90 font-bold text-lg"
+                onClick={() => {
+                  const address = encodeURIComponent(likedRestaurant.restaurant);
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
+                }}
+              >
+                GET DIRECTIONS
               </Button>
               <Button 
                 variant="outline"
