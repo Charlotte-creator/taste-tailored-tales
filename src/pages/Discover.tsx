@@ -63,6 +63,10 @@ const Discover = () => {
     if (direction === "right") {
       setLikedRestaurant(currentRestaurant);
       setShowCelebration(true);
+      // Save to localStorage
+      const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
+      liked.push({ ...currentRestaurant, likedAt: new Date().toISOString() });
+      localStorage.setItem("likedRestaurants", JSON.stringify(liked));
       return; // Stop here when user likes the restaurant
     } else if (direction === "up") {
       toast.success(`${currentRestaurant.name} saved to favorites!`, {

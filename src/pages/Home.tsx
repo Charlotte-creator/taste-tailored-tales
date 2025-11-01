@@ -1,14 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { UtensilsCrossed, User, Users, Sparkles } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UtensilsCrossed, User, Users, Sparkles, MapPin, Heart, MessageCircle } from "lucide-react";
 
 type Tab = "meal" | "profile" | "community";
 
+// Mock community posts
+const communityPosts = [
+  {
+    id: 1,
+    user: "Sarah Chen",
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200",
+    image: "https://images.unsplash.com/photo-1556909212-d5b604d0c90d?w=800",
+    dish: "Homemade Ramen",
+    likes: 124,
+    comments: 23,
+    caption: "Finally nailed my ramen recipe! The broth took 8 hours but so worth it 🍜",
+    timeAgo: "2 hours ago"
+  },
+  {
+    id: 2,
+    user: "Mike Rodriguez",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200",
+    image: "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800",
+    dish: "Pancake Stack",
+    likes: 89,
+    comments: 15,
+    caption: "Sunday morning vibes ☀️ Fluffy pancakes with fresh berries and maple syrup",
+    timeAgo: "5 hours ago"
+  },
+  {
+    id: 3,
+    user: "Emma Taylor",
+    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200",
+    image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800",
+    dish: "Homemade Pizza",
+    likes: 156,
+    comments: 31,
+    caption: "Wood-fired pizza night! Made the dough from scratch 🍕",
+    timeAgo: "1 day ago"
+  }
+];
+
 const Home = () => {
   const [activeTab, setActiveTab] = useState<Tab>("meal");
+  const [likedRestaurants, setLikedRestaurants] = useState<any[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
+    setLikedRestaurants(liked);
+  }, [activeTab]);
 
   const handleStartDiscovery = () => {
     navigate("/onboarding/context");
@@ -84,26 +129,101 @@ const Home = () => {
         {activeTab === "profile" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <h2 className="text-3xl font-bold text-[hsl(var(--crumble-dark))]">
-              Your Profile
+              Your Liked Restaurants
             </h2>
-            <Card className="p-8">
-              <p className="text-foreground/70 text-center py-12">
-                Profile settings coming soon...
-              </p>
-            </Card>
+            {likedRestaurants.length === 0 ? (
+              <Card className="p-8">
+                <p className="text-foreground/70 text-center py-12">
+                  No restaurants liked yet. Start discovering!
+                </p>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {likedRestaurants.map((restaurant, index) => (
+                  <Card key={index} className="overflow-hidden">
+                    <div className="flex gap-4">
+                      <img
+                        src={restaurant.image}
+                        alt={restaurant.name}
+                        className="w-32 h-32 object-cover"
+                      />
+                      <div className="flex-1 p-4 space-y-2">
+                        <div>
+                          <h3 className="text-xl font-bold text-[hsl(var(--crumble-dark))]">
+                            {restaurant.name}
+                          </h3>
+                          <p className="text-foreground/70">{restaurant.restaurant}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="secondary">{restaurant.cuisine}</Badge>
+                          <Badge variant="outline">{restaurant.price}</Badge>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-foreground/70">
+                          <MapPin className="w-4 h-4" />
+                          {restaurant.distance}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {activeTab === "community" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <h2 className="text-3xl font-bold text-[hsl(var(--crumble-dark))]">
-              Community
+              Community Feed
             </h2>
-            <Card className="p-8">
-              <p className="text-foreground/70 text-center py-12">
-                Community features coming soon...
-              </p>
-            </Card>
+            <div className="space-y-6">
+              {communityPosts.map((post) => (
+                <Card key={post.id} className="overflow-hidden">
+                  {/* Post Header */}
+                  <div className="p-4 flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={post.avatar} alt={post.user} />
+                      <AvatarFallback>{post.user[0]}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-semibold text-[hsl(var(--crumble-dark))]">
+                        {post.user}
+                      </p>
+                      <p className="text-xs text-foreground/60">{post.timeAgo}</p>
+                    </div>
+                  </div>
+
+                  {/* Post Image */}
+                  <img
+                    src={post.image}
+                    alt={post.dish}
+                    className="w-full h-80 object-cover"
+                  />
+
+                  {/* Post Actions */}
+                  <div className="p-4 space-y-3">
+                    <div className="flex items-center gap-4">
+                      <button className="flex items-center gap-2 text-foreground/70 hover:text-primary transition-colors">
+                        <Heart className="w-5 h-5" />
+                        <span className="text-sm font-medium">{post.likes}</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-foreground/70 hover:text-primary transition-colors">
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="text-sm font-medium">{post.comments}</span>
+                      </button>
+                    </div>
+                    <div>
+                      <p className="text-sm">
+                        <span className="font-semibold text-[hsl(var(--crumble-dark))]">
+                          {post.user}
+                        </span>{" "}
+                        {post.caption}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </main>
