@@ -319,7 +319,7 @@ const Home = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-6xl mx-auto w-full p-6">
+      <main className="flex-1 max-w-6xl mx-auto w-full p-6 pb-24">
         {activeTab === "meal" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <div className="space-y-2">
@@ -713,7 +713,7 @@ const Home = () => {
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bg-white border-t border-border">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex justify-around items-center">
             <button
