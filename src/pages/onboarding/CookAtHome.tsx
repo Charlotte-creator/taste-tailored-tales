@@ -225,100 +225,102 @@ const CookAtHome = () => {
             <>
               {/* Instructions Detail View */}
               {showInstructions && selectedRecipe && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-primary via-accent to-primary animate-in fade-in duration-500 overflow-y-auto">
-                  <div className="w-full max-w-2xl p-6 animate-in scale-in duration-500">
-                    <div className="text-center space-y-6 mb-8">
-                      <h1 className="text-4xl md:text-6xl font-bold text-white animate-in zoom-in duration-700" style={{ fontFamily: 'cursive' }}>
-                        Let's Cook!
-                      </h1>
-                      <p className="text-2xl text-white font-semibold">
-                        {selectedRecipe.name}
-                      </p>
-                    </div>
+                <div className="fixed inset-0 z-50 bg-gradient-to-br from-primary via-accent to-primary animate-in fade-in duration-500 overflow-y-auto">
+                  <div className="min-h-screen flex items-center justify-center p-4 py-12">
+                    <div className="w-full max-w-2xl animate-in scale-in duration-500">
+                      <div className="text-center space-y-4 mb-6">
+                        <h1 className="text-4xl md:text-5xl font-bold text-white animate-in zoom-in duration-700" style={{ fontFamily: 'cursive' }}>
+                          Let's Cook!
+                        </h1>
+                        <p className="text-xl md:text-2xl text-white font-semibold">
+                          {selectedRecipe.name}
+                        </p>
+                      </div>
 
-                    <Card className="p-6 bg-white">
-                      <div className="space-y-6">
-                        {/* Full Ingredients */}
-                        <div>
-                          <h3 className="text-xl font-bold text-[hsl(var(--crumble-dark))] mb-3 flex items-center gap-2">
-                            <ChefHat className="w-5 h-5" />
-                            Ingredients
-                          </h3>
-                          <ul className="list-disc list-inside space-y-2 text-foreground/70">
-                            {selectedRecipe.ingredients.map((ing, i) => (
-                              <li key={i} className="ml-2">{ing}</li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Missing Ingredients */}
-                        {selectedRecipe.missingIngredients && selectedRecipe.missingIngredients.length > 0 && (
-                          <div className="bg-accent/10 p-4 rounded-lg border border-accent/20">
-                            <h4 className="font-semibold mb-2 text-accent">
-                              Missing Ingredients:
-                            </h4>
-                            <ul className="list-disc list-inside space-y-1 text-foreground/70 mb-3">
-                              {selectedRecipe.missingIngredients.map((ing, i) => (
-                                <li key={i} className="ml-2">{ing}</li>
+                      <Card className="bg-white mb-6">
+                        <div className="p-6 space-y-6">
+                          {/* Full Ingredients */}
+                          <div>
+                            <h3 className="text-lg font-bold text-[hsl(var(--crumble-dark))] mb-3 flex items-center gap-2">
+                              <ChefHat className="w-5 h-5" />
+                              Ingredients
+                            </h3>
+                            <ul className="list-disc list-inside space-y-1.5 text-foreground/80">
+                              {selectedRecipe.ingredients.map((ing, i) => (
+                                <li key={i} className="ml-2 text-sm">{ing}</li>
                               ))}
                             </ul>
-                            <div className="flex flex-col sm:flex-row gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1"
-                                onClick={() => toast.success("Opening UberEats...")}
-                              >
-                                <ShoppingCart className="w-4 h-4 mr-2" />
-                                UberEats
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1"
-                                onClick={() => window.open("https://www.hellofresh.com", "_blank")}
-                              >
-                                HelloFresh
-                              </Button>
-                            </div>
                           </div>
-                        )}
 
-                        {/* Instructions */}
-                        <div>
-                          <h3 className="text-xl font-bold text-[hsl(var(--crumble-dark))] mb-3">
-                            Instructions
-                          </h3>
-                          <ol className="space-y-3">
-                            {selectedRecipe.instructions.map((step, i) => (
-                              <li key={i} className="flex gap-3">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center text-sm font-semibold">
-                                  {i + 1}
-                                </span>
-                                <span className="text-foreground/70 pt-0.5">{step}</span>
-                              </li>
-                            ))}
-                          </ol>
+                          {/* Missing Ingredients */}
+                          {selectedRecipe.missingIngredients && selectedRecipe.missingIngredients.length > 0 && (
+                            <div className="bg-orange-50 p-5 rounded-lg border-2 border-orange-200">
+                              <h4 className="font-bold mb-3 text-orange-700 text-base">
+                                Missing Ingredients:
+                              </h4>
+                              <ul className="list-disc list-inside space-y-1.5 text-foreground/80 mb-4">
+                                {selectedRecipe.missingIngredients.map((ing, i) => (
+                                  <li key={i} className="ml-2 text-sm">{ing}</li>
+                                ))}
+                              </ul>
+                              <div className="grid grid-cols-2 gap-3">
+                                <Button
+                                  size="default"
+                                  variant="outline"
+                                  className="w-full border-orange-300 hover:bg-orange-50"
+                                  onClick={() => toast.success("Opening UberEats...")}
+                                >
+                                  <ShoppingCart className="w-4 h-4 mr-2" />
+                                  UberEats
+                                </Button>
+                                <Button
+                                  size="default"
+                                  variant="outline"
+                                  className="w-full border-orange-300 hover:bg-orange-50"
+                                  onClick={() => window.open("https://www.hellofresh.com", "_blank")}
+                                >
+                                  HelloFresh
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Instructions */}
+                          <div>
+                            <h3 className="text-lg font-bold text-[hsl(var(--crumble-dark))] mb-3">
+                              Instructions
+                            </h3>
+                            <ol className="space-y-4">
+                              {selectedRecipe.instructions.map((step, i) => (
+                                <li key={i} className="flex gap-3">
+                                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+                                    {i + 1}
+                                  </span>
+                                  <span className="text-foreground/80 pt-1 text-sm leading-relaxed">{step}</span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
                         </div>
-                      </div>
-                    </Card>
+                      </Card>
 
-                    <div className="space-y-3 mt-6 animate-in slide-in-from-bottom duration-700">
-                      <Button 
-                        size="lg"
-                        className="w-full bg-white text-primary hover:bg-white/90 font-bold"
-                        onClick={() => navigate("/home")}
-                      >
-                        Continue to Home
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        size="lg"
-                        className="w-full border-white text-white hover:bg-white/20 font-semibold"
-                        onClick={handleKeepSwiping}
-                      >
-                        See More Recipes
-                      </Button>
+                      <div className="space-y-3">
+                        <Button 
+                          size="lg"
+                          className="w-full bg-white text-primary hover:bg-white/90 font-bold shadow-lg"
+                          onClick={() => navigate("/home")}
+                        >
+                          Continue to Home
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="lg"
+                          className="w-full border-2 border-white text-white hover:bg-white/20 font-semibold"
+                          onClick={handleKeepSwiping}
+                        >
+                          See More Recipes
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
