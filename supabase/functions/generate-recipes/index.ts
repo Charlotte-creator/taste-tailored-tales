@@ -11,117 +11,158 @@ serve(async (req) => {
   }
 
   try {
-    const { ingredientText, imageData } = await req.json();
+    const { mode, ingredientText, imageData } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    console.log("Generating recipes with:", { 
-      hasText: !!ingredientText, 
-      hasImage: !!imageData 
-    });
+    console.log("Processing request:", { mode, hasText: !!ingredientText, hasImage: !!imageData });
 
-    // Build the content for the AI request
-    const content = [];
-    
-    let prompt = "You are a professional chef. Analyze the provided ingredients and generate 3 creative, practical recipes.";
-    
-    if (imageData) {
-      prompt += " The user has provided a photo of their fridge. Identify all visible ingredients and use them.";
-      content.push({
-        type: "text",
-        text: prompt + (ingredientText ? `\n\nAdditional ingredients mentioned: ${ingredientText}` : "")
-      });
-      content.push({
-        type: "image_url",
-        image_url: {
-          url: imageData
+    // Mode 1: Extract ingredients from image
+    if (mode === "extract" && imageData) {
+      const content = [
+        {
+          type: "text",
+          text: "You are a professional chef. Analyze this fridge photo and list ALL visible food ingredients. Return ONLY the ingredient names, separated by commas. Be specific and include quantities when visible (e.g., '3 eggs', '1 onion'). Do not include basic pantry items like oil, salt, or black pepper."
+        },
+        {
+          type: "image_url",
+          image_url: {
+            url: imageData
+          }
         }
+      ];
+
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [{ role: "user", content }],
+        }),
       });
-    } else {
-      prompt += `\n\nAvailable ingredients: ${ingredientText}`;
-      content.push({
-        type: "text",
-        text: prompt
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI gateway error:", response.status, errorText);
+        throw new Error(`AI gateway error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const ingredientsText = data.choices[0].message.content;
+      const ingredients = ingredientsText.split(',').map((i: string) => i.trim()).filter(Boolean);
+      
+      return new Response(
+        JSON.stringify({ ingredients }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Mode 2: Generate recipes from ingredients
+    if (mode === "generate") {
+      const basicIngredients = "oil, salt, black pepper";
+      const allIngredients = ingredientText 
+        ? `${ingredientText}, ${basicIngredients}`
+        : basicIngredients;
+
+      const prompt = `You are a professional chef. Create 3 creative, practical recipes using these ingredients: ${allIngredients}
+
+IMPORTANT: Assume the user has basic ingredients (oil, salt, black pepper) and DON'T list them as missing.
+
+For each recipe, provide:
+1. Recipe name
+2. Estimated cooking time (e.g., '25 min')
+3. Estimated calories (e.g., '~450 cal')
+4. List of ingredients needed
+5. Missing ingredients (exclude oil, salt, black pepper)
+6. Step-by-step instructions
+
+Format as JSON:
+{
+  "recipes": [
+    {
+      "name": "Recipe Name",
+      "cookingTime": "30 min",
+      "calories": "~500 cal",
+      "ingredients": ["ingredient 1", "ingredient 2"],
+      "missingIngredients": ["missing ingredient 1"],
+      "instructions": ["step 1", "step 2"]
+    }
+  ]
+}`;
+
+      const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [{ role: "user", content: prompt }],
+        }),
       });
-    }
 
-    content.push({
-      type: "text",
-      text: "\n\nFor each recipe, provide:\n1. Recipe name\n2. Estimated cooking time (e.g., '25 min')\n3. Estimated calories (e.g., '~450 cal')\n4. List of ingredients (mark any missing ingredients)\n5. Step-by-step instructions\n\nFormat your response as JSON with this structure:\n{\n  \"recipes\": [\n    {\n      \"name\": \"Recipe Name\",\n      \"cookingTime\": \"30 min\",\n      \"calories\": \"~500 cal\",\n      \"ingredients\": [\"ingredient 1\", \"ingredient 2\"],\n      \"missingIngredients\": [\"missing ingredient 1\"],\n      \"instructions\": [\"step 1\", \"step 2\"]\n    }\n  ]\n}"
-    });
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "user",
-            content: content
-          }
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("AI gateway error:", response.status, errorText);
+        
+        if (response.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        if (response.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "Payment required. Please add credits to continue." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        throw new Error(`AI gateway error: ${response.status}`);
       }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Payment required. Please add credits to continue." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+
+      const data = await response.json();
+      console.log("AI response received");
+
+      let recipeData;
+      try {
+        const content = data.choices[0].message.content;
+        const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+        const jsonString = jsonMatch ? jsonMatch[1] : content;
+        recipeData = JSON.parse(jsonString);
+      } catch (e) {
+        console.error("Failed to parse recipe JSON:", e);
+        recipeData = {
+          recipes: [
+            {
+              name: "Quick Recipe Suggestion",
+              cookingTime: "30 min",
+              calories: "~500 cal",
+              ingredients: allIngredients.split(",").map((i: string) => i.trim()),
+              missingIngredients: [],
+              instructions: [
+                "Due to a parsing error, please try again or adjust your ingredient list.",
+                "Make sure to provide clear ingredient names."
+              ]
+            }
+          ]
+        };
       }
-      
-      throw new Error(`AI gateway error: ${response.status}`);
+
+      return new Response(
+        JSON.stringify(recipeData),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const data = await response.json();
-    console.log("AI response received");
-
-    let recipeData;
-    try {
-      const content = data.choices[0].message.content;
-      // Extract JSON from markdown code blocks if present
-      const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
-      const jsonString = jsonMatch ? jsonMatch[1] : content;
-      recipeData = JSON.parse(jsonString);
-    } catch (e) {
-      console.error("Failed to parse recipe JSON:", e);
-      // Fallback response
-      recipeData = {
-        recipes: [
-          {
-            name: "Quick Recipe Suggestion",
-            ingredients: ingredientText?.split(",").map((i: string) => i.trim()) || ["Check your ingredients"],
-            missingIngredients: [],
-            instructions: [
-              "Due to a parsing error, please try again or adjust your ingredient list.",
-              "Make sure to provide clear ingredient names."
-            ]
-          }
-        ]
-      };
-    }
-
-    return new Response(
-      JSON.stringify(recipeData),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    throw new Error("Invalid mode or missing parameters");
 
   } catch (error) {
     console.error("Error in generate-recipes function:", error);

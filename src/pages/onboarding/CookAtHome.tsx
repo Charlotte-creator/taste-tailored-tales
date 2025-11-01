@@ -32,6 +32,8 @@ const CookAtHome = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [extractedIngredients, setExtractedIngredients] = useState<string[]>([]);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   useEffect(() => {
     document.title = "What's in Your Kitchen?";
@@ -61,22 +63,40 @@ const CookAtHome = () => {
     setIsLoading(true);
 
     try {
-      // Convert image to base64 if exists
-      let imageData = null;
-      if (imageFile && imagePreview) {
-        imageData = imagePreview;
+      // If we have an image, first extract ingredients
+      if (imageFile && imagePreview && !showConfirmation) {
+        const { data, error } = await supabase.functions.invoke("generate-recipes", {
+          body: {
+            mode: "extract",
+            imageData: imagePreview,
+          },
+        });
+
+        if (error) throw error;
+
+        const ingredients = data.ingredients || [];
+        setExtractedIngredients(ingredients);
+        setShowConfirmation(true);
+        setIsLoading(false);
+        return;
       }
+
+      // Generate recipes with confirmed ingredients
+      const ingredientsToUse = showConfirmation 
+        ? extractedIngredients.join(", ")
+        : ingredientText;
 
       const { data, error } = await supabase.functions.invoke("generate-recipes", {
         body: {
-          ingredientText,
-          imageData,
+          mode: "generate",
+          ingredientText: ingredientsToUse,
         },
       });
 
       if (error) throw error;
 
       setRecipes(data.recipes || []);
+      setShowConfirmation(false);
       toast.success("Recipes generated successfully!");
     } catch (error) {
       console.error("Error generating recipes:", error);
@@ -167,68 +187,120 @@ const CookAtHome = () => {
           </div>
 
           {!recipes.length ? (
-            <div className="space-y-6">
-              {/* Image Upload */}
-              <Card className="p-6">
-                <h3 className="font-semibold text-lg mb-4 text-[hsl(var(--crumble-dark))]">
-                  Upload Fridge Photo
-                </h3>
-                <div className="space-y-4">
-                  <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-primary/30 rounded-lg cursor-pointer hover:border-primary transition-colors bg-white">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Fridge preview"
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center">
-                        <Upload className="w-12 h-12 text-primary/50 mb-2" />
-                        <p className="text-sm text-foreground/70">
-                          Click to upload your fridge photo
-                        </p>
-                      </div>
-                    )}
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageUpload}
+            <>
+              {!showConfirmation ? (
+                <div className="space-y-6">
+                  {/* Image Upload */}
+                  <Card className="p-6">
+                    <h3 className="font-semibold text-lg mb-4 text-[hsl(var(--crumble-dark))]">
+                      Upload Fridge Photo
+                    </h3>
+                    <div className="space-y-4">
+                      <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-primary/30 rounded-lg cursor-pointer hover:border-primary transition-colors bg-white">
+                        {imagePreview ? (
+                          <img
+                            src={imagePreview}
+                            alt="Fridge preview"
+                            className="w-full h-full object-cover rounded-lg"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center">
+                            <Upload className="w-12 h-12 text-primary/50 mb-2" />
+                            <p className="text-sm text-foreground/70">
+                              Click to upload your fridge photo
+                            </p>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                        />
+                      </label>
+                    </div>
+                  </Card>
+
+                  {/* Text Input */}
+                  <Card className="p-6">
+                    <h3 className="font-semibold text-lg mb-4 text-[hsl(var(--crumble-dark))]">
+                      Or List Your Ingredients
+                    </h3>
+                    <Textarea
+                      placeholder="e.g., chicken breast, tomatoes, pasta, garlic, olive oil..."
+                      value={ingredientText}
+                      onChange={(e) => setIngredientText(e.target.value)}
+                      className="min-h-32"
                     />
-                  </label>
+                  </Card>
+
+                  <Button
+                    onClick={handleGenerateRecipes}
+                    disabled={isLoading}
+                    size="lg"
+                    className="w-full"
+                    variant="dark"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Analyzing Ingredients...
+                      </>
+                    ) : (
+                      imageFile ? "Analyze Fridge" : "Generate Recipes"
+                    )}
+                  </Button>
                 </div>
-              </Card>
+              ) : (
+                <div className="space-y-6">
+                  <Card className="p-6">
+                    <h3 className="font-semibold text-lg mb-4 text-[hsl(var(--crumble-dark))]">
+                      Detected Ingredients
+                    </h3>
+                    <p className="text-sm text-foreground/70 mb-4">
+                      We found these ingredients. Edit if needed:
+                    </p>
+                    <Textarea
+                      value={extractedIngredients.join(", ")}
+                      onChange={(e) => setExtractedIngredients(e.target.value.split(",").map(i => i.trim()))}
+                      className="min-h-32"
+                    />
+                    <p className="text-xs text-foreground/60 mt-2">
+                      Note: We'll assume you have basic ingredients like oil, salt, and black pepper
+                    </p>
+                  </Card>
 
-              {/* Text Input */}
-              <Card className="p-6">
-                <h3 className="font-semibold text-lg mb-4 text-[hsl(var(--crumble-dark))]">
-                  Or List Your Ingredients
-                </h3>
-                <Textarea
-                  placeholder="e.g., chicken breast, tomatoes, pasta, garlic, olive oil..."
-                  value={ingredientText}
-                  onChange={(e) => setIngredientText(e.target.value)}
-                  className="min-h-32"
-                />
-              </Card>
-
-              <Button
-                onClick={handleGenerateRecipes}
-                disabled={isLoading}
-                size="lg"
-                className="w-full"
-                variant="dark"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Analyzing Ingredients...
-                  </>
-                ) : (
-                  "Generate Recipes"
-                )}
-              </Button>
-            </div>
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => {
+                        setShowConfirmation(false);
+                        setExtractedIngredients([]);
+                      }}
+                      variant="outline"
+                      className="flex-1"
+                    >
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleGenerateRecipes}
+                      disabled={isLoading}
+                      size="lg"
+                      className="flex-1"
+                      variant="dark"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        "Generate Recipes"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           ) : (
             <>
               {/* Instructions Detail View */}
