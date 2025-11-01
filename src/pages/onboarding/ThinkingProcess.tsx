@@ -15,6 +15,16 @@ const ThinkingProcess = () => {
     analyzePreferences();
   }, []);
 
+  useEffect(() => {
+    // Auto-navigate to discover after 4 seconds once analysis is loaded
+    if (!isLoading && analysis) {
+      const timer = setTimeout(() => {
+        navigate("/discover");
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, analysis, navigate]);
+
   const analyzePreferences = async () => {
     try {
       // Gather all user preferences from localStorage
@@ -89,8 +99,8 @@ const ThinkingProcess = () => {
                   </h3>
                 </div>
                 
-                <div className="prose prose-lg max-w-none">
-                  <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap">
+                <div className="prose prose-base max-w-none">
+                  <p className="text-foreground/80 leading-relaxed">
                     {analysis}
                   </p>
                 </div>
