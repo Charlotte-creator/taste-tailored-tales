@@ -16,6 +16,7 @@ import Constraints from "./pages/onboarding/Constraints";
 import CookAtHome from "./pages/onboarding/CookAtHome";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
+import ThinkingProcess from "./pages/onboarding/ThinkingProcess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
           <Route path="/onboarding/priority" element={<Priority />} />
           <Route path="/onboarding/constraints" element={<Constraints />} />
           <Route path="/onboarding/cook-at-home" element={<CookAtHome />} />
+          <Route path="/onboarding/thinking-process" element={<ThinkingProcess />} />
           <Route path="/home" element={<Home />} />
           <Route path="/discover" element={<Discover />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

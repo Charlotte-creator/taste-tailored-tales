@@ -27,7 +27,7 @@ const Constraints = () => {
 
   const handleContinue = () => {
     localStorage.setItem("constraints", JSON.stringify(values));
-    navigate("/discover");
+    navigate("/onboarding/thinking-process");
   };
 
   return (

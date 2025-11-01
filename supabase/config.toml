@@ -2,3 +2,6 @@ project_id = "rrlisdmtvkexfsxgkali"
 
 [functions.generate-recipes]
 verify_jwt = false
+
+[functions.analyze-preferences]
+verify_jwt = false
