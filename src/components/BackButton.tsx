@@ -10,7 +10,7 @@ const BackButton = () => {
       variant="ghost"
       size="icon"
       onClick={() => navigate(-1)}
-      className="fixed top-4 right-4 z-50 bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
+      className="fixed top-4 left-4 z-50 bg-white/80 backdrop-blur-sm hover:bg-white shadow-sm"
     >
       <ArrowLeft className="w-5 h-5" />
     </Button>
