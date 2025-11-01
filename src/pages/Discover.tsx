@@ -131,14 +131,14 @@ const Discover = () => {
       <BackButton />
       {/* Celebration Overlay */}
       {showCelebration && likedRestaurant && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-primary via-accent to-primary animate-in fade-in duration-500">
-          <div className="text-center space-y-8 p-8 animate-in scale-in duration-500">
-            <h1 className="text-6xl md:text-8xl font-bold text-white animate-in zoom-in duration-700" style={{ fontFamily: 'cursive' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background animate-in fade-in duration-500">
+          <div className="text-center space-y-8 p-8 max-w-lg animate-in scale-in duration-500">
+            <h1 className="text-6xl md:text-7xl font-bold text-[hsl(var(--crumble-dark))] animate-in zoom-in duration-700" style={{ fontFamily: 'Georgia, serif' }}>
               Bon Appétit!
             </h1>
             
-            <div className="flex justify-center gap-4 animate-in slide-in-from-bottom duration-700 delay-150">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+            <div className="flex justify-center animate-in slide-in-from-bottom duration-700 delay-150">
+              <div className="w-40 h-40 rounded-full overflow-hidden border-8 border-white shadow-2xl ring-4 ring-primary/20">
                 <img 
                   src={likedRestaurant.image} 
                   alt={likedRestaurant.name}
@@ -148,13 +148,13 @@ const Discover = () => {
             </div>
 
             <div className="animate-in slide-in-from-bottom duration-700 delay-300">
-              <p className="text-2xl text-white font-semibold mb-2">
+              <p className="text-lg text-foreground/70 mb-3">
                 You matched with
               </p>
-              <p className="text-3xl text-white font-bold">
+              <p className="text-3xl md:text-4xl text-[hsl(var(--crumble-dark))] font-bold mb-2">
                 {likedRestaurant.name}
               </p>
-              <p className="text-xl text-white/90 mt-1">
+              <p className="text-xl text-foreground/80">
                 at {likedRestaurant.restaurant}
               </p>
             </div>
@@ -162,14 +162,16 @@ const Discover = () => {
             <div className="space-y-3 animate-in slide-in-from-bottom duration-700 delay-500">
               <Button 
                 size="lg"
-                className="w-full max-w-xs bg-white text-primary hover:bg-white/90 font-bold text-lg"
+                variant="dark"
+                className="w-full max-w-sm font-bold text-lg shadow-lg hover:scale-105 transition-transform"
                 onClick={() => toast.success("Opening delivery app...")}
               >
                 ORDER NOW
               </Button>
               <Button 
                 size="lg"
-                className="w-full max-w-xs bg-white text-primary hover:bg-white/90 font-bold text-lg"
+                variant="dark"
+                className="w-full max-w-sm font-bold text-lg shadow-lg hover:scale-105 transition-transform"
                 onClick={() => {
                   const address = encodeURIComponent(likedRestaurant.restaurant);
                   window.open(`https://www.google.com/maps/search/?api=1&query=${address}`, '_blank');
@@ -180,7 +182,7 @@ const Discover = () => {
               <Button 
                 variant="outline"
                 size="lg"
-                className="w-full max-w-xs border-white text-white hover:bg-white/20 font-semibold"
+                className="w-full max-w-sm border-2 border-[hsl(var(--crumble-dark))] text-[hsl(var(--crumble-dark))] hover:bg-[hsl(var(--crumble-dark))] hover:text-white font-semibold hover:scale-105 transition-all"
                 onClick={handleKeepSwiping}
               >
                 KEEP SWIPING
