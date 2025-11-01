@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Upload, Loader2, ShoppingCart, Heart, X, Check, Clock, Flame, ChefHat } from "lucide-react";
+import { Upload, Loader2, ShoppingCart, Heart, X, Check, Clock, Flame, ChefHat, UtensilsCrossed, User, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import BackButton from "@/components/BackButton";
@@ -167,9 +167,9 @@ const CookAtHome = () => {
   };
 
   return (
-    <div className="min-h-screen hexagon-pattern flex flex-col p-6">
+    <div className="min-h-screen hexagon-pattern flex flex-col pb-20">
       <BackButton />
-      <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col justify-between py-12 animate-in fade-in duration-500">
+      <div className="w-full max-w-2xl mx-auto flex-1 flex flex-col justify-between py-12 px-6 animate-in fade-in duration-500">
         {/* Progress Bar */}
         <div className="w-full h-1 bg-white/30 rounded-full overflow-hidden">
           <div className="h-full bg-[hsl(var(--crumble-dark))] w-4/5 transition-all duration-300" />
@@ -530,6 +530,35 @@ const CookAtHome = () => {
           )}
         </div>
       </div>
+
+      {/* Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-border z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4">
+          <div className="flex justify-around items-center">
+            <button
+              onClick={() => navigate("/home")}
+              className="flex flex-col items-center gap-1 transition-colors text-foreground/50 hover:text-foreground/70"
+            >
+              <UtensilsCrossed className="w-6 h-6" />
+              <span className="text-xs font-medium">Meal</span>
+            </button>
+            <button
+              onClick={() => navigate("/home")}
+              className="flex flex-col items-center gap-1 transition-colors text-foreground/50 hover:text-foreground/70"
+            >
+              <User className="w-6 h-6" />
+              <span className="text-xs font-medium">Profile</span>
+            </button>
+            <button
+              onClick={() => navigate("/home")}
+              className="flex flex-col items-center gap-1 transition-colors text-foreground/50 hover:text-foreground/70"
+            >
+              <Users className="w-6 h-6" />
+              <span className="text-xs font-medium">Community</span>
+            </button>
+          </div>
+        </div>
+      </nav>
     </div>
   );
 };
