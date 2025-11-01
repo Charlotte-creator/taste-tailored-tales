@@ -54,12 +54,15 @@ const mockRestaurants = [
 const Discover = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [likedRestaurant, setLikedRestaurant] = useState<typeof mockRestaurants[0] | null>(null);
 
   const currentRestaurant = mockRestaurants[currentIndex];
 
   const handleSwipe = (direction: "left" | "right" | "up") => {
     if (direction === "right") {
-      toast.success(`Added ${currentRestaurant.name} to your list!`);
+      setLikedRestaurant(currentRestaurant);
+      setShowCelebration(true);
       return; // Stop here when user likes the restaurant
     } else if (direction === "up") {
       toast.success(`${currentRestaurant.name} saved to favorites!`, {
@@ -77,8 +80,71 @@ const Discover = () => {
     }, 300);
   };
 
+  const handleKeepSwiping = () => {
+    setShowCelebration(false);
+    setTimeout(() => {
+      if (currentIndex < mockRestaurants.length - 1) {
+        setCurrentIndex(currentIndex + 1);
+        setShowDetails(false);
+      } else {
+        setCurrentIndex(0);
+      }
+    }, 300);
+  };
+
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col items-center justify-center p-4">
+      {/* Celebration Overlay */}
+      {showCelebration && likedRestaurant && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-primary via-accent to-primary animate-in fade-in duration-500">
+          <div className="text-center space-y-8 p-8 animate-in scale-in duration-500">
+            <h1 className="text-6xl md:text-8xl font-bold text-white animate-in zoom-in duration-700" style={{ fontFamily: 'cursive' }}>
+              Bon Appétit!
+            </h1>
+            
+            <div className="flex justify-center gap-4 animate-in slide-in-from-bottom duration-700 delay-150">
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+                <img 
+                  src={likedRestaurant.image} 
+                  alt={likedRestaurant.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="animate-in slide-in-from-bottom duration-700 delay-300">
+              <p className="text-2xl text-white font-semibold mb-2">
+                You matched with
+              </p>
+              <p className="text-3xl text-white font-bold">
+                {likedRestaurant.name}
+              </p>
+              <p className="text-xl text-white/90 mt-1">
+                at {likedRestaurant.restaurant}
+              </p>
+            </div>
+
+            <div className="space-y-3 animate-in slide-in-from-bottom duration-700 delay-500">
+              <Button 
+                size="lg"
+                className="w-full max-w-xs bg-white text-primary hover:bg-white/90 font-bold text-lg"
+                onClick={() => toast.success("Feature coming soon!")}
+              >
+                ORDER NOW
+              </Button>
+              <Button 
+                variant="outline"
+                size="lg"
+                className="w-full max-w-xs border-white text-white hover:bg-white/20 font-semibold"
+                onClick={handleKeepSwiping}
+              >
+                KEEP SWIPING
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-md animate-in fade-in duration-500">
         {/* Header */}
         <div className="mb-6 text-center">
