@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import BackButton from "@/components/BackButton";
 
 const Welcome = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col items-center justify-center p-6">
+      <BackButton />
       <div className="w-full max-w-md space-y-8 animate-in fade-in duration-500">
         {/* Logo */}
         <div className="text-center space-y-2">

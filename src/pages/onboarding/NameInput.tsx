@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, Eye } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 const NameInput = () => {
   const [name, setName] = useState("");
@@ -17,6 +18,7 @@ const NameInput = () => {
 
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col p-6">
+      <BackButton />
       <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-between py-12 animate-in fade-in duration-500">
         {/* Progress Bar */}
         <div className="w-full h-1 bg-white/30 rounded-full overflow-hidden">

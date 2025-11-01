@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, Check, Star, Info, MapPin, Clock, DollarSign } from "lucide-react";
 import { toast } from "sonner";
+import BackButton from "@/components/BackButton";
 
 // Mock restaurant data
 const mockRestaurants = [
@@ -98,6 +99,7 @@ const Discover = () => {
 
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col items-center justify-center p-4">
+      <BackButton />
       {/* Celebration Overlay */}
       {showCelebration && likedRestaurant && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-primary via-accent to-primary animate-in fade-in duration-500">

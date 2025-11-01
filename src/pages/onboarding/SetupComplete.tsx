@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 const SetupComplete = () => {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ const SetupComplete = () => {
 
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col p-6">
+      <BackButton />
       <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-center items-center py-12 animate-in fade-in duration-500">
         {/* Success Animation */}
         <div className="space-y-8 text-center">

@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UtensilsCrossed, User, Users, Sparkles, MapPin, Heart, MessageCircle } from "lucide-react";
+import BackButton from "@/components/BackButton";
 
 type Tab = "meal" | "profile" | "community";
 
@@ -61,6 +62,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col">
+      <BackButton />
       {/* Header */}
       <header className="bg-white border-b border-border p-4">
         <div className="max-w-6xl mx-auto">
