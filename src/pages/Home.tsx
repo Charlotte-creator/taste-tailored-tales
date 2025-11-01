@@ -55,6 +55,7 @@ const Home = () => {
   const [likedRecipes, setLikedRecipes] = useState<any[]>([]);
   const [mealHistory, setMealHistory] = useState<any[]>([]);
   const [cookedRecipeId, setCookedRecipeId] = useState<string | null>(null);
+  const [visitedRestaurantId, setVisitedRestaurantId] = useState<number | null>(null);
   const [expenseInputs, setExpenseInputs] = useState<Record<string, string>>({});
   const [stats, setStats] = useState({
     homecookCount: 0,
@@ -227,6 +228,81 @@ const Home = () => {
     } catch (error) {
       console.error("Error tracking meal:", error);
       toast.error("Failed to track meal");
+    }
+  };
+
+  const handleMarkAsVisited = async (restaurantId: number) => {
+    const expense = expenseInputs[`restaurant-${restaurantId}`];
+    if (!expense || parseFloat(expense) <= 0) {
+      toast.error("Please enter a valid expense amount");
+      return;
+    }
+
+    try {
+      const restaurant = likedRestaurants.find((r, idx) => idx === restaurantId);
+      const mealEntry = {
+        meal_type: 'dineout',
+        meal_name: restaurant?.name,
+        restaurant_name: restaurant?.restaurant,
+        expense: parseFloat(expense),
+        created_at: new Date().toISOString()
+      };
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (userId) {
+        await supabase.from('meal_history').insert({
+          user_id: userId,
+          ...mealEntry
+        });
+      } else {
+        const localHistory = JSON.parse(localStorage.getItem('mealHistory') || '[]');
+        localHistory.push(mealEntry);
+        localStorage.setItem('mealHistory', JSON.stringify(localHistory));
+      }
+
+      toast.success("Restaurant visit tracked!");
+      setVisitedRestaurantId(null);
+      setExpenseInputs(prev => {
+        const copy = { ...prev };
+        delete copy[`restaurant-${restaurantId}`];
+        return copy;
+      });
+      
+      // Refresh data
+      let history = [];
+      if (userId) {
+        const { data } = await supabase
+          .from('meal_history')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        history = data || [];
+      } else {
+        history = JSON.parse(localStorage.getItem('mealHistory') || '[]');
+      }
+      setMealHistory(history);
+
+      // Recalculate stats
+      if (history.length > 0) {
+        const homecook = history.filter(m => m.meal_type === 'homecook');
+        const dineout = history.filter(m => m.meal_type === 'dineout');
+        const totalExpense = history.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+        const homecookExpense = homecook.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+        const dineoutExpense = dineout.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+
+        setStats({
+          homecookCount: homecook.length,
+          dineoutCount: dineout.length,
+          totalExpense,
+          homecookExpense,
+          dineoutExpense
+        });
+      }
+    } catch (error) {
+      console.error("Error tracking restaurant visit:", error);
+      toast.error("Failed to track visit");
     }
   };
 
@@ -505,7 +581,7 @@ const Home = () => {
                           alt={restaurant.name}
                           className="w-32 h-32 object-cover"
                         />
-                        <div className="flex-1 p-4 space-y-2">
+                        <div className="flex-1 p-4 space-y-3">
                           <div>
                             <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
                               {restaurant.name}
@@ -516,6 +592,53 @@ const Home = () => {
                             <Badge variant="secondary">{restaurant.cuisine}</Badge>
                             <Badge variant="outline">{restaurant.price}</Badge>
                           </div>
+                          
+                          {visitedRestaurantId === index ? (
+                            <div className="flex gap-2 pt-2">
+                              <input
+                                type="number"
+                                placeholder="Cost ($)"
+                                value={expenseInputs[`restaurant-${index}`] || ""}
+                                onChange={(e) => setExpenseInputs(prev => ({
+                                  ...prev,
+                                  [`restaurant-${index}`]: e.target.value
+                                }))}
+                                className="flex-1 px-3 py-2 text-sm border rounded-md"
+                                step="0.01"
+                                min="0"
+                              />
+                              <Button
+                                size="sm"
+                                onClick={() => handleMarkAsVisited(index)}
+                              >
+                                Save
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setVisitedRestaurantId(null);
+                                  setExpenseInputs(prev => {
+                                    const copy = { ...prev };
+                                    delete copy[`restaurant-${index}`];
+                                    return copy;
+                                  });
+                                }}
+                              >
+                                Cancel
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="w-full"
+                              onClick={() => setVisitedRestaurantId(index)}
+                            >
+                              <Store className="w-4 h-4 mr-2" />
+                              Mark as Visited
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </Card>
