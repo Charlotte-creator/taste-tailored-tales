@@ -8,6 +8,7 @@ import { Upload, Loader2, ShoppingCart, Heart, X, Check, Clock, Flame, ChefHat }
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import BackButton from "@/components/BackButton";
+import { useEffect } from "react";
 
 interface Recipe {
   id?: string;
@@ -31,6 +32,13 @@ const CookAtHome = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showInstructions, setShowInstructions] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+
+  useEffect(() => {
+    document.title = "What's in Your Kitchen?";
+    return () => {
+      document.title = "Crumble - Find Food That Matches Your Mood";
+    };
+  }, []);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
