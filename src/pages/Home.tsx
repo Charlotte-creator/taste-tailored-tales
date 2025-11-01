@@ -58,7 +58,6 @@ const Home = () => {
                     onClick={handleStartDiscovery}
                   >
                     Start Discovering
-                    <UtensilsCrossed className="w-5 h-5 ml-2" />
                   </Button>
                 </div>
               </div>
