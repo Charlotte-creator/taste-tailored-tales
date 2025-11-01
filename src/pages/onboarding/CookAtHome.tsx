@@ -3,16 +3,18 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Loader2, ShoppingCart } from "lucide-react";
+import { Upload, Loader2, ShoppingCart, Heart } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import BackButton from "@/components/BackButton";
 
 interface Recipe {
+  id?: string;
   name: string;
   ingredients: string[];
   instructions: string[];
   missingIngredients?: string[];
+  liked?: boolean;
 }
 
 const CookAtHome = () => {
@@ -74,6 +76,38 @@ const CookAtHome = () => {
     toast.success("Opening delivery app...");
     // In a real app, this would open UberEats/HelloFresh with the ingredient list
     console.log("Ordering:", ingredientList);
+  };
+
+  const handleLikeRecipe = async (recipe: Recipe, index: number) => {
+    try {
+      // For now, use a guest user ID. In production, this would use auth.uid()
+      const userId = 'guest';
+      
+      if (recipe.liked) {
+        // Unlike recipe - remove from localStorage for now
+        toast.success("Recipe removed from favorites");
+      } else {
+        // Like recipe - save to database
+        const { error } = await supabase.from('liked_recipes').insert({
+          user_id: userId,
+          recipe_name: recipe.name,
+          ingredients: recipe.ingredients,
+          instructions: recipe.instructions,
+          missing_ingredients: recipe.missingIngredients || []
+        });
+
+        if (error) throw error;
+        toast.success("Recipe saved to favorites!");
+      }
+
+      // Update local state
+      setRecipes(recipes.map((r, i) => 
+        i === index ? { ...r, liked: !r.liked } : r
+      ));
+    } catch (error) {
+      console.error("Error liking recipe:", error);
+      toast.error("Failed to save recipe");
+    }
   };
 
   return (
@@ -180,9 +214,19 @@ const CookAtHome = () => {
 
               {recipes.map((recipe, index) => (
                 <Card key={index} className="p-6">
-                  <h3 className="text-xl font-bold mb-4 text-[hsl(var(--crumble-dark))]">
-                    {recipe.name}
-                  </h3>
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="text-xl font-bold text-[hsl(var(--crumble-dark))]">
+                      {recipe.name}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleLikeRecipe(recipe, index)}
+                      className={recipe.liked ? "text-red-500" : "text-foreground/50"}
+                    >
+                      <Heart className={`w-6 h-6 ${recipe.liked ? "fill-current" : ""}`} />
+                    </Button>
+                  </div>
 
                   <div className="space-y-4">
                     <div>

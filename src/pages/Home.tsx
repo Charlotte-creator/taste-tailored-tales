@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UtensilsCrossed, User, Users, Sparkles, MapPin, Heart, MessageCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { UtensilsCrossed, User, Users, Sparkles, MapPin, Heart, MessageCircle, ChefHat, Store, DollarSign, TrendingUp } from "lucide-react";
 import BackButton from "@/components/BackButton";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type Tab = "meal" | "profile" | "community";
 
@@ -49,15 +52,118 @@ const communityPosts = [
 const Home = () => {
   const [activeTab, setActiveTab] = useState<Tab>("meal");
   const [likedRestaurants, setLikedRestaurants] = useState<any[]>([]);
+  const [likedRecipes, setLikedRecipes] = useState<any[]>([]);
+  const [mealHistory, setMealHistory] = useState<any[]>([]);
+  const [cookedRecipeId, setCookedRecipeId] = useState<string | null>(null);
+  const [expenseInput, setExpenseInput] = useState("");
+  const [stats, setStats] = useState({
+    homecookCount: 0,
+    dineoutCount: 0,
+    totalExpense: 0,
+    homecookExpense: 0,
+    dineoutExpense: 0
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
-    const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
-    setLikedRestaurants(liked);
+    const fetchData = async () => {
+      // Get liked restaurants from localStorage
+      const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
+      setLikedRestaurants(liked);
+
+      // For now, use guest user. In production, use auth.uid()
+      const userId = 'guest';
+
+      // Fetch liked recipes
+      const { data: recipes } = await supabase
+        .from('liked_recipes')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      setLikedRecipes(recipes || []);
+
+      // Fetch meal history
+      const { data: history } = await supabase
+        .from('meal_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      setMealHistory(history || []);
+
+      // Calculate stats
+      if (history) {
+        const homecook = history.filter(m => m.meal_type === 'homecook');
+        const dineout = history.filter(m => m.meal_type === 'dineout');
+        const totalExpense = history.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+        const homecookExpense = homecook.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+        const dineoutExpense = dineout.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+
+        setStats({
+          homecookCount: homecook.length,
+          dineoutCount: dineout.length,
+          totalExpense,
+          homecookExpense,
+          dineoutExpense
+        });
+      }
+    };
+
+    if (activeTab === 'profile') {
+      fetchData();
+    }
   }, [activeTab]);
 
   const handleStartDiscovery = () => {
     navigate("/onboarding/context");
+  };
+
+  const handleMarkAsCooked = async (recipe: any) => {
+    if (!expenseInput || parseFloat(expenseInput) <= 0) {
+      toast.error("Please enter a valid expense amount");
+      return;
+    }
+
+    try {
+      const userId = 'guest'; // In production, use auth.uid()
+      await supabase.from('meal_history').insert({
+        user_id: userId,
+        meal_type: 'homecook',
+        meal_name: recipe.recipe_name,
+        expense: parseFloat(expenseInput)
+      });
+
+      toast.success("Meal tracked successfully!");
+      setCookedRecipeId(null);
+      setExpenseInput("");
+      
+      // Refresh data
+      const { data: history } = await supabase
+        .from('meal_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      setMealHistory(history || []);
+
+      // Recalculate stats
+      if (history) {
+        const homecook = history.filter(m => m.meal_type === 'homecook');
+        const dineout = history.filter(m => m.meal_type === 'dineout');
+        const totalExpense = history.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+        const homecookExpense = homecook.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+        const dineoutExpense = dineout.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+
+        setStats({
+          homecookCount: homecook.length,
+          dineoutCount: dineout.length,
+          totalExpense,
+          homecookExpense,
+          dineoutExpense
+        });
+      }
+    } catch (error) {
+      console.error("Error tracking meal:", error);
+      toast.error("Failed to track meal");
+    }
   };
 
   return (
@@ -131,44 +237,203 @@ const Home = () => {
         {activeTab === "profile" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             <h2 className="text-3xl font-bold text-[hsl(var(--crumble-dark))]">
-              Your Liked Restaurants
+              Your Dashboard
             </h2>
-            {likedRestaurants.length === 0 ? (
-              <Card className="p-8">
-                <p className="text-foreground/70 text-center py-12">
-                  No restaurants liked yet. Start discovering!
-                </p>
+
+            {/* Stats Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Homecook vs Dine Out Percentage */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4 text-[hsl(var(--crumble-dark))]">
+                  Meal Distribution
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-2">
+                        <ChefHat className="w-4 h-4 text-primary" />
+                        <span className="text-sm font-medium">Home Cook</span>
+                      </div>
+                      <span className="text-sm font-bold">
+                        {stats.homecookCount + stats.dineoutCount > 0
+                          ? Math.round((stats.homecookCount / (stats.homecookCount + stats.dineoutCount)) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                    <Progress 
+                      value={stats.homecookCount + stats.dineoutCount > 0
+                        ? (stats.homecookCount / (stats.homecookCount + stats.dineoutCount)) * 100
+                        : 0} 
+                      className="h-2"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center gap-2">
+                        <Store className="w-4 h-4 text-accent" />
+                        <span className="text-sm font-medium">Dine Out</span>
+                      </div>
+                      <span className="text-sm font-bold">
+                        {stats.homecookCount + stats.dineoutCount > 0
+                          ? Math.round((stats.dineoutCount / (stats.homecookCount + stats.dineoutCount)) * 100)
+                          : 0}%
+                      </span>
+                    </div>
+                    <Progress 
+                      value={stats.homecookCount + stats.dineoutCount > 0
+                        ? (stats.dineoutCount / (stats.homecookCount + stats.dineoutCount)) * 100
+                        : 0} 
+                      className="h-2 [&>div]:bg-accent"
+                    />
+                  </div>
+                </div>
               </Card>
-            ) : (
-              <div className="grid gap-4">
-                {likedRestaurants.map((restaurant, index) => (
-                  <Card key={index} className="overflow-hidden">
-                    <div className="flex gap-4">
-                      <img
-                        src={restaurant.image}
-                        alt={restaurant.name}
-                        className="w-32 h-32 object-cover"
-                      />
-                      <div className="flex-1 p-4 space-y-2">
-                        <div>
-                          <h3 className="text-xl font-bold text-[hsl(var(--crumble-dark))]">
-                            {restaurant.name}
-                          </h3>
-                          <p className="text-foreground/70">{restaurant.restaurant}</p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{restaurant.cuisine}</Badge>
-                          <Badge variant="outline">{restaurant.price}</Badge>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-foreground/70">
-                          <MapPin className="w-4 h-4" />
-                          {restaurant.distance}
+
+              {/* Expense Tracking */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold mb-4 text-[hsl(var(--crumble-dark))]">
+                  Expense Tracking
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-foreground/70">Total Spent</span>
+                    <span className="text-2xl font-bold text-[hsl(var(--crumble-dark))]">
+                      ${stats.totalExpense.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t">
+                    <div className="flex items-center gap-2">
+                      <ChefHat className="w-4 h-4 text-primary" />
+                      <span className="text-sm">Home Cook</span>
+                    </div>
+                    <span className="font-semibold">${stats.homecookExpense.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Store className="w-4 h-4 text-accent" />
+                      <span className="text-sm">Dine Out</span>
+                    </div>
+                    <span className="font-semibold">${stats.dineoutExpense.toFixed(2)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-foreground/60 pt-2">
+                    <TrendingUp className="w-3 h-3" />
+                    <span>Track your spending habits</span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            {/* Liked Recipes */}
+            {likedRecipes.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-4 text-[hsl(var(--crumble-dark))]">
+                  Liked Recipes
+                </h3>
+                <div className="grid gap-4">
+                  {likedRecipes.map((recipe, index) => (
+                    <Card key={index} className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
+                          {recipe.recipe_name}
+                        </h4>
+                        <Heart className="w-5 h-5 text-red-500 fill-current" />
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-sm text-foreground/70">
+                          <span className="font-semibold">{recipe.ingredients.length}</span> ingredients
+                        </p>
+                        {recipe.missing_ingredients && recipe.missing_ingredients.length > 0 && (
+                          <Badge variant="outline" className="text-xs">
+                            {recipe.missing_ingredients.length} missing
+                          </Badge>
+                        )}
+                        
+                        {cookedRecipeId === recipe.id ? (
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="Cost ($)"
+                              value={expenseInput}
+                              onChange={(e) => setExpenseInput(e.target.value)}
+                              className="flex-1 px-3 py-2 text-sm border rounded-md"
+                              step="0.01"
+                              min="0"
+                            />
+                            <Button
+                              size="sm"
+                              onClick={() => handleMarkAsCooked(recipe)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setCookedRecipeId(null);
+                                setExpenseInput("");
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="w-full"
+                            onClick={() => setCookedRecipeId(recipe.id)}
+                          >
+                            <ChefHat className="w-4 h-4 mr-2" />
+                            Mark as Cooked
+                          </Button>
+                        )}
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Liked Restaurants */}
+            {likedRestaurants.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-4 text-[hsl(var(--crumble-dark))]">
+                  Liked Restaurants
+                </h3>
+                <div className="grid gap-4">
+                  {likedRestaurants.map((restaurant, index) => (
+                    <Card key={index} className="overflow-hidden">
+                      <div className="flex gap-4">
+                        <img
+                          src={restaurant.image}
+                          alt={restaurant.name}
+                          className="w-32 h-32 object-cover"
+                        />
+                        <div className="flex-1 p-4 space-y-2">
+                          <div>
+                            <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
+                              {restaurant.name}
+                            </h4>
+                            <p className="text-sm text-foreground/70">{restaurant.restaurant}</p>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary">{restaurant.cuisine}</Badge>
+                            <Badge variant="outline">{restaurant.price}</Badge>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
+            )}
+
+            {likedRecipes.length === 0 && likedRestaurants.length === 0 && stats.homecookCount === 0 && stats.dineoutCount === 0 && (
+              <Card className="p-8">
+                <p className="text-foreground/70 text-center py-12">
+                  Start discovering meals to see your personalized dashboard!
+                </p>
+              </Card>
             )}
           </div>
         )}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X, Check, Star, Info, MapPin, Clock, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import BackButton from "@/components/BackButton";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock restaurant data
 const mockRestaurants = [
@@ -60,7 +61,7 @@ const Discover = () => {
 
   const currentRestaurant = mockRestaurants[currentIndex];
 
-  const handleSwipe = (direction: "left" | "right" | "up") => {
+  const handleSwipe = async (direction: "left" | "right" | "up") => {
     if (direction === "right") {
       setLikedRestaurant(currentRestaurant);
       setShowCelebration(true);
@@ -68,6 +69,18 @@ const Discover = () => {
       const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
       liked.push({ ...currentRestaurant, likedAt: new Date().toISOString() });
       localStorage.setItem("likedRestaurants", JSON.stringify(liked));
+      
+      // Save to meal history
+      const userId = 'guest'; // In production, use auth.uid()
+      const priceNum = parseFloat(currentRestaurant.totalPrice.replace('$', ''));
+      await supabase.from('meal_history').insert({
+        user_id: userId,
+        meal_type: 'dineout',
+        meal_name: currentRestaurant.name,
+        restaurant_name: currentRestaurant.restaurant,
+        expense: priceNum
+      });
+      
       return; // Stop here when user likes the restaurant
     } else if (direction === "up") {
       toast.success(`${currentRestaurant.name} saved to favorites!`, {
