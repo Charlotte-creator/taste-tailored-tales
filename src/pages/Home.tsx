@@ -550,7 +550,6 @@ const Home = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="w-full"
                                 onClick={() => setCookedRecipeId(recipe.id)}
                               >
                                 <ChefHat className="w-4 h-4 mr-2" />
@@ -632,7 +631,6 @@ const Home = () => {
                             <Button
                               size="sm"
                               variant="outline"
-                              className="w-full"
                               onClick={() => setVisitedRestaurantId(index)}
                             >
                               <Store className="w-4 h-4 mr-2" />
