@@ -359,16 +359,16 @@ const Home = () => {
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-4">
               <Card className="p-4 text-center">
-                <p className="text-2xl font-bold text-primary">0</p>
+                <p className="text-2xl font-bold text-primary">{likedRecipes.length + likedRestaurants.length}</p>
                 <p className="text-sm text-foreground/70">Favorites</p>
               </Card>
               <Card className="p-4 text-center">
-                <p className="text-2xl font-bold text-primary">0</p>
+                <p className="text-2xl font-bold text-primary">{stats.homecookCount + stats.dineoutCount}</p>
                 <p className="text-sm text-foreground/70">Tried</p>
               </Card>
               <Card className="p-4 text-center">
-                <p className="text-2xl font-bold text-primary">0</p>
-                <p className="text-sm text-foreground/70">Reviews</p>
+                <p className="text-2xl font-bold text-primary">{mealHistory.length}</p>
+                <p className="text-sm text-foreground/70">History</p>
               </Card>
             </div>
           </div>
