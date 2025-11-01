@@ -21,7 +21,7 @@ serve(async (req) => {
     console.log('Analyzing user preferences:', preferences);
 
     // Build the analysis prompt
-    const prompt = `You are a food recommendation AI analyzing a user's preferences. Generate a brief, personalized summary (MAXIMUM 3 SHORT SENTENCES) based on their profile:
+    const prompt = `You are a food recommendation AI analyzing a user's preferences. Generate EXACTLY 3 bullet points (each under 50 words) based on their profile:
 
 User Profile:
 - Dietary restrictions: ${preferences.allergies?.length > 0 ? preferences.allergies.join(', ') : 'None'}
@@ -32,7 +32,12 @@ User Profile:
 - Max travel time: ${preferences.travelTime || '30'} minutes
 - Vegan/Vegetarian: ${preferences.vegan ? 'Yes' : 'No'}
 
-Write exactly 3 concise sentences explaining what you understand about their preferences and what you'll recommend. Be warm but brief.`;
+Format: Return ONLY 3 bullet points starting with "•". Each point should be one short insight about their preferences. No extra text.
+
+Example format:
+• You love trying new places with diverse flavors and comfort food
+• Your $50 budget and 30-minute radius give great options
+• We'll focus on exciting new restaurants you haven't visited`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -45,7 +50,7 @@ Write exactly 3 concise sentences explaining what you understand about their pre
         messages: [
           { 
             role: 'system', 
-            content: 'You are a concise food recommendation expert. Keep responses to exactly 3 short sentences.' 
+            content: 'You are a concise food recommendation expert. Return ONLY 3 bullet points, each under 50 words. Start each with "•".' 
           },
           { 
             role: 'user', 

@@ -99,10 +99,15 @@ const ThinkingProcess = () => {
                   </h3>
                 </div>
                 
-                <div className="prose prose-base max-w-none">
-                  <p className="text-foreground/80 leading-relaxed">
-                    {analysis}
-                  </p>
+                <div className="space-y-3">
+                  {analysis.split('\n').filter(line => line.trim()).map((line, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <span className="text-primary text-lg flex-shrink-0">•</span>
+                      <p className="text-foreground/80 leading-relaxed">
+                        {line.replace(/^[•\-\*]\s*/, '')}
+                      </p>
+                    </div>
+                  ))}
                 </div>
 
                 <div className="pt-6 border-t">
