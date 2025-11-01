@@ -7,9 +7,13 @@ import Index from "./pages/Index";
 import Welcome from "./pages/Welcome";
 import NameInput from "./pages/onboarding/NameInput";
 import FoodInput from "./pages/onboarding/FoodInput";
+import Allergy from "./pages/onboarding/Allergy";
+import CuisineSummary from "./pages/onboarding/CuisineSummary";
+import SetupComplete from "./pages/onboarding/SetupComplete";
 import DiningContext from "./pages/onboarding/DiningContext";
 import Priority from "./pages/onboarding/Priority";
 import Constraints from "./pages/onboarding/Constraints";
+import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import NotFound from "./pages/NotFound";
 
@@ -25,9 +29,13 @@ const App = () => (
           <Route path="/" element={<Welcome />} />
           <Route path="/onboarding/name" element={<NameInput />} />
           <Route path="/onboarding/foods" element={<FoodInput />} />
+          <Route path="/onboarding/allergy" element={<Allergy />} />
+          <Route path="/onboarding/cuisine-summary" element={<CuisineSummary />} />
+          <Route path="/onboarding/setup-complete" element={<SetupComplete />} />
           <Route path="/onboarding/context" element={<DiningContext />} />
           <Route path="/onboarding/priority" element={<Priority />} />
           <Route path="/onboarding/constraints" element={<Constraints />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/discover" element={<Discover />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

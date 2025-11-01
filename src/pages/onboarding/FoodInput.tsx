@@ -37,7 +37,7 @@ const FoodInput = () => {
   const handleContinue = () => {
     if (foods.filter(f => f.image || f.name).length >= 2) {
       localStorage.setItem("userFoods", JSON.stringify(foods));
-      navigate("/onboarding/context");
+      navigate("/onboarding/allergy");
     } else {
       toast.error("Please add at least 2 favorite foods");
     }
