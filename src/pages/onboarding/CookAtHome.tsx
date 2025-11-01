@@ -182,7 +182,7 @@ const CookAtHome = () => {
               What's in Your Kitchen?
             </h1>
             <p className="text-foreground/70">
-              Upload a photo of your fridge or list your ingredients
+              Upload a photo of your fridge or receipt, or list your ingredients
             </p>
           </div>
 
@@ -193,21 +193,21 @@ const CookAtHome = () => {
                   {/* Image Upload */}
                   <Card className="p-6">
                     <h3 className="font-semibold text-lg mb-4 text-[hsl(var(--crumble-dark))]">
-                      Upload Fridge Photo
+                      Upload Fridge or Receipt Photo
                     </h3>
                     <div className="space-y-4">
                       <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-primary/30 rounded-lg cursor-pointer hover:border-primary transition-colors bg-white">
                         {imagePreview ? (
                           <img
                             src={imagePreview}
-                            alt="Fridge preview"
+                            alt="Fridge or receipt preview"
                             className="w-full h-full object-cover rounded-lg"
                           />
                         ) : (
                           <div className="flex flex-col items-center justify-center">
                             <Upload className="w-12 h-12 text-primary/50 mb-2" />
                             <p className="text-sm text-foreground/70">
-                              Click to upload your fridge photo
+                              Click to upload your fridge or receipt photo
                             </p>
                           </div>
                         )}
@@ -241,14 +241,14 @@ const CookAtHome = () => {
                     className="w-full"
                     variant="dark"
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Analyzing Ingredients...
-                      </>
-                    ) : (
-                      imageFile ? "Analyze Fridge" : "Generate Recipes"
-                    )}
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Analyzing Ingredients...
+                        </>
+                      ) : (
+                        imageFile ? "Analyze Photo" : "Generate Recipes"
+                      )}
                   </Button>
                 </div>
               ) : (
