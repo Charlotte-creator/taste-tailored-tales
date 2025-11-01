@@ -2,29 +2,30 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Clock, DollarSign, Flame, AlertCircle, Leaf } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
+import { ArrowRight, Clock, DollarSign, Leaf } from "lucide-react";
 
-const constraints = [
-  { id: "time", label: "Time limit", icon: Clock },
-  { id: "budget", label: "Budget", icon: DollarSign },
-  { id: "calorie", label: "Calorie conscious", icon: Flame },
-  { id: "allergy", label: "Allergies", icon: AlertCircle },
-  { id: "vegan", label: "Vegan/Vegetarian", icon: Leaf },
-];
+interface ConstraintValues {
+  travelTime: number;
+  budget: number;
+  vegan: boolean;
+}
 
 const Constraints = () => {
-  const [selected, setSelected] = useState<string[]>([]);
+  const [values, setValues] = useState<ConstraintValues>({
+    travelTime: 30, // default 30 minutes
+    budget: 50, // default $50
+    vegan: false,
+  });
   const navigate = useNavigate();
 
-  const toggleConstraint = (id: string) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
+  const formatTravelTime = (minutes: number) => {
+    if (minutes < 60) return `${minutes} min`;
+    return `${Math.floor(minutes / 60)}h ${minutes % 60 > 0 ? `${minutes % 60}min` : ''}`.trim();
   };
 
   const handleContinue = () => {
-    localStorage.setItem("constraints", JSON.stringify(selected));
+    localStorage.setItem("constraints", JSON.stringify(values));
     navigate("/discover");
   };
 
@@ -47,44 +48,95 @@ const Constraints = () => {
             </p>
           </div>
 
-          <div className="space-y-3">
-            {constraints.map((constraint) => {
-              const Icon = constraint.icon;
-              const isSelected = selected.includes(constraint.id);
-              return (
-                <Card
-                  key={constraint.id}
-                  onClick={() => toggleConstraint(constraint.id)}
-                  className={`p-5 cursor-pointer transition-all duration-200 bg-white ${
-                    isSelected
-                      ? "border-2 border-primary shadow-md"
-                      : "border-2 border-transparent hover:border-primary/50"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                          isSelected
-                            ? "bg-primary text-white"
-                            : "bg-primary/10 text-primary"
-                        }`}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <span className="font-medium text-[hsl(var(--crumble-dark))]">
-                        {constraint.label}
-                      </span>
-                    </div>
-                    {isSelected && (
-                      <Badge variant="secondary" className="bg-primary text-white">
-                        Selected
-                      </Badge>
-                    )}
+          <div className="space-y-6">
+            {/* Travel Time Slider */}
+            <Card className="p-6 bg-white border-2 border-primary/20">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-primary" />
                   </div>
-                </Card>
-              );
-            })}
+                  <div className="flex-1">
+                    <h3 className="font-medium text-[hsl(var(--crumble-dark))]">
+                      Travel time limit
+                    </h3>
+                    <p className="text-sm text-foreground/70">
+                      Maximum travel time: {formatTravelTime(values.travelTime)}
+                    </p>
+                  </div>
+                </div>
+                <Slider
+                  value={[values.travelTime]}
+                  onValueChange={(val) => setValues({ ...values, travelTime: val[0] })}
+                  min={5}
+                  max={60}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-foreground/50">
+                  <span>5 min</span>
+                  <span>1 hour</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Budget Slider */}
+            <Card className="p-6 bg-white border-2 border-primary/20">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <DollarSign className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-[hsl(var(--crumble-dark))]">
+                      Budget
+                    </h3>
+                    <p className="text-sm text-foreground/70">
+                      Maximum budget: ${values.budget}
+                    </p>
+                  </div>
+                </div>
+                <Slider
+                  value={[values.budget]}
+                  onValueChange={(val) => setValues({ ...values, budget: val[0] })}
+                  min={5}
+                  max={500}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-foreground/50">
+                  <span>$5</span>
+                  <span>$500</span>
+                </div>
+              </div>
+            </Card>
+
+            {/* Vegan/Vegetarian Toggle */}
+            <Card
+              onClick={() => setValues({ ...values, vegan: !values.vegan })}
+              className={`p-5 cursor-pointer transition-all duration-200 bg-white ${
+                values.vegan
+                  ? "border-2 border-primary shadow-md"
+                  : "border-2 border-transparent hover:border-primary/50"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                      values.vegan
+                        ? "bg-primary text-white"
+                        : "bg-primary/10 text-primary"
+                    }`}
+                  >
+                    <Leaf className="w-5 h-5" />
+                  </div>
+                  <span className="font-medium text-[hsl(var(--crumble-dark))]">
+                    Vegan/Vegetarian
+                  </span>
+                </div>
+              </div>
+            </Card>
           </div>
 
           <p className="text-sm text-center text-foreground/60">
