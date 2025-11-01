@@ -204,21 +204,23 @@ const CookAtHome = () => {
                             <li key={i}>{ing}</li>
                           ))}
                         </ul>
-                        <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row gap-2">
                           <Button
                             size="sm"
                             variant="outline"
+                            className="flex-1"
                             onClick={() => handleOrderIngredients(recipe.missingIngredients!)}
                           >
                             <ShoppingCart className="w-4 h-4 mr-2" />
-                            Order on UberEats
+                            UberEats
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
+                            className="flex-1"
                             onClick={() => window.open("https://www.hellofresh.com", "_blank")}
                           >
-                            Order HelloFresh Kit
+                            HelloFresh
                           </Button>
                         </div>
                       </div>
