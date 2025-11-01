@@ -72,7 +72,7 @@ const Home = () => {
       setLikedRestaurants(liked);
 
       // For now, use guest user. In production, use auth.uid()
-      const userId = 'guest';
+      const userId = '00000000-0000-0000-0000-000000000000';
 
       // Fetch liked recipes
       const { data: recipes } = await supabase
@@ -124,7 +124,7 @@ const Home = () => {
     }
 
     try {
-      const userId = 'guest'; // In production, use auth.uid()
+      const userId = '00000000-0000-0000-0000-000000000000'; // Fixed guest UUID (in production, use auth.uid())
       await supabase.from('meal_history').insert({
         user_id: userId,
         meal_type: 'homecook',

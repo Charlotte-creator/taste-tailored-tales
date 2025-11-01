@@ -91,7 +91,8 @@ const CookAtHome = () => {
     if (direction === "right") {
       // Like and show instructions
       try {
-        const userId = 'guest';
+        // Use a fixed guest UUID for now (in production, use auth.uid())
+        const userId = '00000000-0000-0000-0000-000000000000';
         const { error } = await supabase.from('liked_recipes').insert({
           user_id: userId,
           recipe_name: currentRecipe.name,

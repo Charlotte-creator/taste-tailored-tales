@@ -71,7 +71,7 @@ const Discover = () => {
       localStorage.setItem("likedRestaurants", JSON.stringify(liked));
       
       // Save to meal history
-      const userId = 'guest'; // In production, use auth.uid()
+      const userId = '00000000-0000-0000-0000-000000000000'; // Fixed guest UUID (in production, use auth.uid())
       const priceNum = parseFloat(currentRestaurant.totalPrice.replace('$', ''));
       await supabase.from('meal_history').insert({
         user_id: userId,
