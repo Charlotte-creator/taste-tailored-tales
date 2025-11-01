@@ -109,7 +109,7 @@ const Home = () => {
           });
         }
       } else {
-        // Not logged in: show locally saved liked recipes, no meal history
+        // Not logged in: load from localStorage
         const localLiked = JSON.parse(localStorage.getItem('likedRecipes') || '[]');
         const mapped = localLiked.map((r: any, idx: number) => ({
           id: `local-${idx}`,
@@ -119,8 +119,29 @@ const Home = () => {
           missing_ingredients: r.missingIngredients || [],
         }));
         setLikedRecipes(mapped);
-        setMealHistory([]);
-        setStats({ homecookCount: 0, dineoutCount: 0, totalExpense: 0, homecookExpense: 0, dineoutExpense: 0 });
+        
+        // Load local meal history
+        const localHistory = JSON.parse(localStorage.getItem('mealHistory') || '[]');
+        setMealHistory(localHistory);
+        
+        // Calculate stats from local data
+        if (localHistory.length > 0) {
+          const homecook = localHistory.filter(m => m.meal_type === 'homecook');
+          const dineout = localHistory.filter(m => m.meal_type === 'dineout');
+          const totalExpense = localHistory.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+          const homecookExpense = homecook.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+          const dineoutExpense = dineout.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+
+          setStats({
+            homecookCount: homecook.length,
+            dineoutCount: dineout.length,
+            totalExpense,
+            homecookExpense,
+            dineoutExpense
+          });
+        } else {
+          setStats({ homecookCount: 0, dineoutCount: 0, totalExpense: 0, homecookExpense: 0, dineoutExpense: 0 });
+        }
       }
     };
 
@@ -141,20 +162,29 @@ const Home = () => {
     }
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      if (!userId) {
-        toast.info("Log in to track expenses in your dashboard");
-        return;
-      }
-      
       const recipe = likedRecipes.find(r => r.id === recipeId);
-      await supabase.from('meal_history').insert({
-        user_id: userId,
+      const mealEntry = {
         meal_type: 'homecook',
         meal_name: recipe?.recipe_name,
-        expense: parseFloat(expense)
-      });
+        expense: parseFloat(expense),
+        created_at: new Date().toISOString()
+      };
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (userId) {
+        // Logged in: save to backend
+        await supabase.from('meal_history').insert({
+          user_id: userId,
+          ...mealEntry
+        });
+      } else {
+        // Guest: save to localStorage
+        const localHistory = JSON.parse(localStorage.getItem('mealHistory') || '[]');
+        localHistory.push(mealEntry);
+        localStorage.setItem('mealHistory', JSON.stringify(localHistory));
+      }
 
       toast.success("Meal tracked successfully!");
       setCookedRecipeId(null);
@@ -165,15 +195,21 @@ const Home = () => {
       });
       
       // Refresh data
-      const { data: history } = await supabase
-        .from('meal_history')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      setMealHistory(history || []);
+      let history = [];
+      if (userId) {
+        const { data } = await supabase
+          .from('meal_history')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        history = data || [];
+      } else {
+        history = JSON.parse(localStorage.getItem('mealHistory') || '[]');
+      }
+      setMealHistory(history);
 
       // Recalculate stats
-      if (history) {
+      if (history.length > 0) {
         const homecook = history.filter(m => m.meal_type === 'homecook');
         const dineout = history.filter(m => m.meal_type === 'dineout');
         const totalExpense = history.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
