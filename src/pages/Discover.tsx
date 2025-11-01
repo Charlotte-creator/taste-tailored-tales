@@ -60,6 +60,7 @@ const Discover = () => {
   const handleSwipe = (direction: "left" | "right" | "up") => {
     if (direction === "right") {
       toast.success(`Added ${currentRestaurant.name} to your list!`);
+      return; // Stop here when user likes the restaurant
     } else if (direction === "up") {
       toast.success(`${currentRestaurant.name} saved to favorites!`, {
         icon: "⭐",
