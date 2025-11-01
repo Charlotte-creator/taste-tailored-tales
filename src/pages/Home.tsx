@@ -71,40 +71,55 @@ const Home = () => {
       const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
       setLikedRestaurants(liked);
 
-      // For now, use guest user. In production, use auth.uid()
-      const userId = '00000000-0000-0000-0000-000000000000';
+      // If logged in, load from backend; else fall back to local
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
 
-      // Fetch liked recipes
-      const { data: recipes } = await supabase
-        .from('liked_recipes')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      setLikedRecipes(recipes || []);
+      if (userId) {
+        // Fetch liked recipes
+        const { data: recipes } = await supabase
+          .from('liked_recipes')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        setLikedRecipes(recipes || []);
 
-      // Fetch meal history
-      const { data: history } = await supabase
-        .from('meal_history')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      setMealHistory(history || []);
+        // Fetch meal history
+        const { data: history } = await supabase
+          .from('meal_history')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        setMealHistory(history || []);
 
-      // Calculate stats
-      if (history) {
-        const homecook = history.filter(m => m.meal_type === 'homecook');
-        const dineout = history.filter(m => m.meal_type === 'dineout');
-        const totalExpense = history.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
-        const homecookExpense = homecook.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
-        const dineoutExpense = dineout.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+        // Calculate stats
+        if (history) {
+          const homecook = history.filter(m => m.meal_type === 'homecook');
+          const dineout = history.filter(m => m.meal_type === 'dineout');
+          const totalExpense = history.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+          const homecookExpense = homecook.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
+          const dineoutExpense = dineout.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
 
-        setStats({
-          homecookCount: homecook.length,
-          dineoutCount: dineout.length,
-          totalExpense,
-          homecookExpense,
-          dineoutExpense
-        });
+          setStats({
+            homecookCount: homecook.length,
+            dineoutCount: dineout.length,
+            totalExpense,
+            homecookExpense,
+            dineoutExpense
+          });
+        }
+      } else {
+        // Not logged in: show locally saved liked recipes, no meal history
+        const localLiked = JSON.parse(localStorage.getItem('likedRecipes') || '[]');
+        const mapped = localLiked.map((r: any) => ({
+          recipe_name: r.name,
+          ingredients: r.ingredients,
+          instructions: r.instructions,
+          missing_ingredients: r.missingIngredients || [],
+        }));
+        setLikedRecipes(mapped);
+        setMealHistory([]);
+        setStats({ homecookCount: 0, dineoutCount: 0, totalExpense: 0, homecookExpense: 0, dineoutExpense: 0 });
       }
     };
 
@@ -124,7 +139,12 @@ const Home = () => {
     }
 
     try {
-      const userId = '00000000-0000-0000-0000-000000000000'; // Fixed guest UUID (in production, use auth.uid())
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (!userId) {
+        toast.info("Log in to track expenses in your dashboard");
+        return;
+      }
       await supabase.from('meal_history').insert({
         user_id: userId,
         meal_type: 'homecook',

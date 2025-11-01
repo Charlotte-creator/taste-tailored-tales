@@ -91,21 +91,27 @@ const CookAtHome = () => {
     if (direction === "right") {
       // Like and show instructions
       try {
-        // Use a fixed guest UUID for now (in production, use auth.uid())
-        const userId = '00000000-0000-0000-0000-000000000000';
-        const { error } = await supabase.from('liked_recipes').insert({
-          user_id: userId,
-          recipe_name: currentRecipe.name,
-          ingredients: currentRecipe.ingredients,
-          instructions: currentRecipe.instructions,
-          missing_ingredients: currentRecipe.missingIngredients || []
-        });
-
-        if (error) throw error;
-        
+        // Try to save to backend if user is authenticated
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          const { error } = await supabase.from('liked_recipes').insert({
+            user_id: session.user.id,
+            recipe_name: currentRecipe.name,
+            ingredients: currentRecipe.ingredients,
+            instructions: currentRecipe.instructions,
+            missing_ingredients: currentRecipe.missingIngredients || []
+          });
+          if (error) throw error;
+          toast.success("Recipe saved to favorites!");
+        } else {
+          // Fallback: store locally when not logged in
+          const local = JSON.parse(localStorage.getItem("likedRecipes") || "[]");
+          local.push({ ...currentRecipe, likedAt: new Date().toISOString() });
+          localStorage.setItem("likedRecipes", JSON.stringify(local));
+          toast.success("Recipe saved locally. Log in to sync.");
+        }
         setSelectedRecipe(currentRecipe);
         setShowInstructions(true);
-        toast.success("Recipe saved to favorites!");
       } catch (error) {
         console.error("Error saving recipe:", error);
         toast.error("Failed to save recipe");

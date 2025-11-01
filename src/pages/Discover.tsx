@@ -70,16 +70,22 @@ const Discover = () => {
       liked.push({ ...currentRestaurant, likedAt: new Date().toISOString() });
       localStorage.setItem("likedRestaurants", JSON.stringify(liked));
       
-      // Save to meal history
-      const userId = '00000000-0000-0000-0000-000000000000'; // Fixed guest UUID (in production, use auth.uid())
-      const priceNum = parseFloat(currentRestaurant.totalPrice.replace('$', ''));
-      await supabase.from('meal_history').insert({
-        user_id: userId,
-        meal_type: 'dineout',
-        meal_name: currentRestaurant.name,
-        restaurant_name: currentRestaurant.restaurant,
-        expense: priceNum
-      });
+      // Save to meal history if authenticated
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user?.id) {
+          const priceNum = parseFloat(currentRestaurant.totalPrice.replace('$', ''));
+          await supabase.from('meal_history').insert({
+            user_id: session.user.id,
+            meal_type: 'dineout',
+            meal_name: currentRestaurant.name,
+            restaurant_name: currentRestaurant.restaurant,
+            expense: priceNum
+          });
+        }
+      } catch (e) {
+        console.warn('Non-fatal: failed to record dineout history', e);
+      }
       
       return; // Stop here when user likes the restaurant
     } else if (direction === "up") {
