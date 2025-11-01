@@ -395,7 +395,17 @@ const Home = () => {
                 </h3>
                 <div className="grid gap-4">
                   {likedRecipes.map((recipe, index) => {
-                    const recipeImage = `https://images.unsplash.com/photo-${1556909212 + index * 1000}?w=400&h=300&fit=crop`;
+                    // Use a variety of food images
+                    const foodImages = [
+                      "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop", // salad bowl
+                      "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&h=300&fit=crop", // pizza
+                      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400&h=300&fit=crop", // pasta
+                      "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&h=300&fit=crop", // pancakes
+                      "https://images.unsplash.com/photo-1529042410759-befb1204b468?w=400&h=300&fit=crop", // chicken dish
+                      "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=300&fit=crop", // soup
+                    ];
+                    const recipeImage = foodImages[index % foodImages.length];
+                    
                     return (
                       <Card key={recipe.id || index} className="overflow-hidden">
                         <div className="relative h-32">
@@ -403,6 +413,9 @@ const Home = () => {
                             src={recipeImage}
                             alt={recipe.recipe_name}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop";
+                            }}
                           />
                         </div>
                         <div className="p-6">
