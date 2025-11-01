@@ -50,7 +50,7 @@ serve(async (req) => {
 
     content.push({
       type: "text",
-      text: "\n\nFor each recipe, provide:\n1. Recipe name\n2. List of ingredients (mark any missing ingredients)\n3. Step-by-step instructions\n\nFormat your response as JSON with this structure:\n{\n  \"recipes\": [\n    {\n      \"name\": \"Recipe Name\",\n      \"ingredients\": [\"ingredient 1\", \"ingredient 2\"],\n      \"missingIngredients\": [\"missing ingredient 1\"],\n      \"instructions\": [\"step 1\", \"step 2\"]\n    }\n  ]\n}"
+      text: "\n\nFor each recipe, provide:\n1. Recipe name\n2. Estimated cooking time (e.g., '25 min')\n3. Estimated calories (e.g., '~450 cal')\n4. List of ingredients (mark any missing ingredients)\n5. Step-by-step instructions\n\nFormat your response as JSON with this structure:\n{\n  \"recipes\": [\n    {\n      \"name\": \"Recipe Name\",\n      \"cookingTime\": \"30 min\",\n      \"calories\": \"~500 cal\",\n      \"ingredients\": [\"ingredient 1\", \"ingredient 2\"],\n      \"missingIngredients\": [\"missing ingredient 1\"],\n      \"instructions\": [\"step 1\", \"step 2\"]\n    }\n  ]\n}"
     });
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
