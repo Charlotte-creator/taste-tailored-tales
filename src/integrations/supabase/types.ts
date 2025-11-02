@@ -81,6 +81,7 @@ export type Database = {
           first_name: string | null
           id: string
           nutrition_balance: string | null
+          onboarding_completed: boolean | null
           suggestions: string | null
           updated_at: string
         }
@@ -90,6 +91,7 @@ export type Database = {
           first_name?: string | null
           id: string
           nutrition_balance?: string | null
+          onboarding_completed?: boolean | null
           suggestions?: string | null
           updated_at?: string
         }
@@ -99,6 +101,7 @@ export type Database = {
           first_name?: string | null
           id?: string
           nutrition_balance?: string | null
+          onboarding_completed?: boolean | null
           suggestions?: string | null
           updated_at?: string
         }

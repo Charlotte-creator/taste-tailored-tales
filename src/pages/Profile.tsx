@@ -16,11 +16,32 @@ const Profile = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, initializing } = useAuth();
 
   useEffect(() => {
     loadProfile();
   }, [user]);
+
+  // Check if user needs to complete onboarding
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!initializing && user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding/name", { replace: true });
+        }
+      } else if (!initializing && !user) {
+        navigate("/auth", { replace: true });
+      }
+    };
+
+    checkOnboarding();
+  }, [user, initializing, navigate]);
 
   const loadProfile = async () => {
     if (!user) return;

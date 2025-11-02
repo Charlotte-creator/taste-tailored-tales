@@ -29,9 +29,24 @@ export default function Auth() {
   }, [mode]);
 
   useEffect(() => {
-    if (user) {
-      navigate("/home", { replace: true });
-    }
+    const checkOnboardingStatus = async () => {
+      if (user) {
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+
+        if (profile?.onboarding_completed) {
+          navigate("/home", { replace: true });
+        } else {
+          navigate("/onboarding/name", { replace: true });
+        }
+      }
+    };
+
+    checkOnboardingStatus();
   }, [user, navigate]);
 
   const isValid = useMemo(() => {

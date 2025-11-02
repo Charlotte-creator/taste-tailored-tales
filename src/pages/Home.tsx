@@ -78,6 +78,25 @@ const Home = () => {
     }
   }, [user, initializing, navigate]);
 
+  // Check if user needs to complete onboarding
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding/name", { replace: true });
+        }
+      }
+    };
+
+    checkOnboarding();
+  }, [user, navigate]);
+
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;

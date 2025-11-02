@@ -3,18 +3,42 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import BackButton from "@/components/BackButton";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const SetupComplete = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
+    const markOnboardingComplete = async () => {
+      if (user) {
+        try {
+          const { error } = await supabase
+            .from("profiles")
+            .update({ onboarding_completed: true })
+            .eq("id", user.id);
+
+          if (error) {
+            console.error("Error marking onboarding complete:", error);
+            toast.error("Failed to save progress");
+          }
+        } catch (error) {
+          console.error("Error marking onboarding complete:", error);
+        }
+      }
+    };
+
+    markOnboardingComplete();
+
     // Auto-redirect after 3 seconds
     const timer = setTimeout(() => {
       navigate("/home");
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, user]);
 
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col p-6">

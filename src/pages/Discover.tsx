@@ -70,6 +70,25 @@ const Discover = () => {
     }
   }, [user, initializing, navigate]);
 
+  // Check if user needs to complete onboarding
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("onboarding_completed")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.onboarding_completed) {
+          navigate("/onboarding/name", { replace: true });
+        }
+      }
+    };
+
+    checkOnboarding();
+  }, [user, navigate]);
+
   const currentRestaurant = mockRestaurants[currentIndex];
 
   const handleSwipe = async (direction: "left" | "right" | "up") => {
