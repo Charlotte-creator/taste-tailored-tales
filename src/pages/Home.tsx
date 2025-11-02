@@ -75,9 +75,18 @@ const Home = () => {
       const name = localStorage.getItem("userName") || "";
       setUserName(name);
       
-      // Get liked restaurants from localStorage
+      // Clean up duplicate restaurants in localStorage
       const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
-      setLikedRestaurants(liked);
+      const uniqueRestaurants = liked.filter((restaurant: any, index: number, self: any[]) => 
+        index === self.findIndex((r: any) => 
+          r.id === restaurant.id || 
+          (r.name === restaurant.name && r.restaurant === restaurant.restaurant)
+        )
+      );
+      if (uniqueRestaurants.length !== liked.length) {
+        localStorage.setItem("likedRestaurants", JSON.stringify(uniqueRestaurants));
+      }
+      setLikedRestaurants(uniqueRestaurants);
 
       // If logged in, load from backend; else fall back to local
       const { data: { session } } = await supabase.auth.getSession();

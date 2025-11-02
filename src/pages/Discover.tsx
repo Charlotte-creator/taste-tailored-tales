@@ -65,10 +65,18 @@ const Discover = () => {
     if (direction === "right") {
       setLikedRestaurant(currentRestaurant);
       setShowCelebration(true);
-      // Save to localStorage
+      
+      // Save to localStorage (check for duplicates)
       const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
-      liked.push({ ...currentRestaurant, likedAt: new Date().toISOString() });
-      localStorage.setItem("likedRestaurants", JSON.stringify(liked));
+      const isDuplicate = liked.some((item: any) => 
+        item.id === currentRestaurant.id || 
+        (item.name === currentRestaurant.name && item.restaurant === currentRestaurant.restaurant)
+      );
+      
+      if (!isDuplicate) {
+        liked.push({ ...currentRestaurant, likedAt: new Date().toISOString() });
+        localStorage.setItem("likedRestaurants", JSON.stringify(liked));
+      }
       
       // Save to meal history (auth or local)
       try {
