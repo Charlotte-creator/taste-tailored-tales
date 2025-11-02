@@ -20,7 +20,15 @@ serve(async (req) => {
     }
 
     if (!foodImages || foodImages.length === 0) {
-      throw new Error("No food images provided");
+      // Return a default profile if no images
+      return new Response(
+        JSON.stringify({
+          nutrition_balance: "We'll learn more about your nutrition preferences as you add food photos and interact with the app.",
+          cuisine_variety: "Share some photos of your favorite foods to help us understand your cuisine preferences better.",
+          suggestions: "Start by uploading photos of meals you enjoy to get personalized recommendations tailored to your taste."
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Build the prompt for vision analysis

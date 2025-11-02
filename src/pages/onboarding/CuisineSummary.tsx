@@ -21,10 +21,23 @@ const CuisineSummary = () => {
     // Get the AI-generated profile from localStorage
     const profile = localStorage.getItem("cuisineProfile");
     if (profile) {
-      const parsed = JSON.parse(profile);
-      setNutritionBalance(parsed.nutrition_balance || "");
-      setCuisineVariety(parsed.cuisine_variety || "");
-      setSuggestions(parsed.suggestions || "");
+      try {
+        const parsed = JSON.parse(profile);
+        setNutritionBalance(parsed.nutrition_balance || "");
+        setCuisineVariety(parsed.cuisine_variety || "");
+        setSuggestions(parsed.suggestions || "");
+      } catch (error) {
+        console.error("Error parsing profile:", error);
+        // Set default values
+        setNutritionBalance("We'll learn more about your nutrition preferences as you add food photos and interact with the app.");
+        setCuisineVariety("Share some photos of your favorite foods to help us understand your cuisine preferences better.");
+        setSuggestions("Start by uploading photos of meals you enjoy to get personalized recommendations tailored to your taste.");
+      }
+    } else {
+      // Set default values if no profile exists
+      setNutritionBalance("We'll learn more about your nutrition preferences as you add food photos and interact with the app.");
+      setCuisineVariety("Share some photos of your favorite foods to help us understand your cuisine preferences better.");
+      setSuggestions("Start by uploading photos of meals you enjoy to get personalized recommendations tailored to your taste.");
     }
   }, []);
 
