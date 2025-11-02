@@ -764,7 +764,7 @@ const Home = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => setVisitedRestaurantId(index)}
-                              className="w-full sm:w-auto"
+                              className="w-full"
                             >
                               <Store className="w-4 h-4 mr-2" />
                               Mark as Visited
