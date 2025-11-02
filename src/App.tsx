@@ -19,7 +19,6 @@ import Discover from "./pages/Discover";
 import ThinkingProcess from "./pages/onboarding/ThinkingProcess";
 import AnalyzingTaste from "./pages/onboarding/AnalyzingTaste";
 import Auth from "./pages/Auth";
-import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,7 +44,6 @@ const App = () => (
           <Route path="/onboarding/thinking-process" element={<ThinkingProcess />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
           <Route path="/discover" element={<Discover />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

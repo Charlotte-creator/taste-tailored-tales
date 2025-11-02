@@ -397,13 +397,6 @@ const Home = () => {
                 </h2>
                 <p className="text-foreground/70">Welcome back!</p>
               </div>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/profile")}
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                View Taste Profile
-              </Button>
             </div>
 
             {/* Stats Dashboard */}
