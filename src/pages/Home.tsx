@@ -153,9 +153,7 @@ const Home = () => {
       }
     };
 
-    if (activeTab === 'profile') {
-      fetchData();
-    }
+    fetchData();
   }, [activeTab]);
 
   const handleStartDiscovery = () => {
@@ -705,9 +703,9 @@ const Home = () => {
                           alt={restaurant.name}
                           className="w-32 h-32 object-cover flex-shrink-0"
                         />
-                        <div className="flex-1 p-4 space-y-3 min-w-0">
+                        <div className="flex-1 p-4 space-y-3 min-w-0 overflow-hidden">
                           <div>
-                            <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))] truncate">
+                            <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
                               {restaurant.name}
                             </h4>
                             <p className="text-sm text-foreground/70 truncate">{restaurant.restaurant}</p>

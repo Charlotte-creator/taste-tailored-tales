@@ -306,7 +306,7 @@ const CookAtHome = () => {
               {/* Instructions Detail View */}
               {showInstructions && selectedRecipe && (
                 <div className="fixed inset-0 z-50 bg-gradient-to-br from-primary via-accent to-primary animate-in fade-in duration-500 overflow-y-auto">
-                  <div className="min-h-screen flex items-center justify-center p-4 py-12">
+                  <div className="min-h-screen flex items-center justify-center px-6 py-32">
                     <div className="w-full max-w-2xl animate-in scale-in duration-500">
                       <div className="text-center space-y-4 mb-6">
                         <h1 className="text-4xl md:text-5xl font-bold text-white animate-in zoom-in duration-700" style={{ fontFamily: 'cursive' }}>
