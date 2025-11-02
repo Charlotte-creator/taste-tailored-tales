@@ -19,7 +19,14 @@ const AnalyzingTaste = () => {
       const foods = JSON.parse(localStorage.getItem("userFoods") || "[]");
       const allergies = JSON.parse(localStorage.getItem("userAllergies") || "[]");
 
-      console.log("Analyzing food preferences:", { foods, allergies });
+      console.log("Analyzing food preferences:", { foodCount: foods.length, allergies });
+
+      // Extract only the base64 image data from foods
+      const foodImages = foods
+        .filter((f: any) => f.image)
+        .map((f: any) => f.image);
+
+      console.log("Extracted food images:", foodImages.length);
 
       // Simulated stages
       setStatus("Analyzing your food preferences...");
@@ -31,9 +38,9 @@ const AnalyzingTaste = () => {
       setStatus("Checking dietary restrictions...");
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Call the edge function to generate summary
+      // Call the edge function to generate taste profile
       const { data, error } = await supabase.functions.invoke("generate-taste-profile", {
-        body: { foods, allergies },
+        body: { foodImages, allergies },
       });
 
       if (error) {
@@ -41,8 +48,12 @@ const AnalyzingTaste = () => {
         throw error;
       }
 
-      if (data?.summary) {
-        localStorage.setItem("cuisineSummary", data.summary);
+      console.log("Received taste profile data:", data);
+
+      // The edge function returns nutrition_balance, cuisine_variety, and suggestions
+      if (data && (data.nutrition_balance || data.cuisine_variety || data.suggestions)) {
+        // Save the full profile to localStorage
+        localStorage.setItem("cuisineProfile", JSON.stringify(data));
         setStatus("Profile complete!");
         setIsComplete(true);
         
@@ -51,7 +62,7 @@ const AnalyzingTaste = () => {
           navigate("/onboarding/cuisine-summary");
         }, 1000);
       } else {
-        throw new Error("No summary returned");
+        throw new Error("No profile data returned");
       }
     } catch (error) {
       console.error("Failed to analyze preferences:", error);
