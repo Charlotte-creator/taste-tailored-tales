@@ -600,35 +600,34 @@ const Home = () => {
                     
                     return (
                       <Card key={recipe.id || index} className="overflow-hidden">
-                        <div className="relative h-32">
+                        <div className="flex gap-4">
                           <img
                             src={recipeImage}
                             alt={recipe.recipe_name}
-                            className="w-full h-full object-cover"
+                            className="w-32 h-32 object-cover flex-shrink-0"
                             onError={(e) => {
                               e.currentTarget.src = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop";
                             }}
                           />
-                        </div>
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-3">
-                            <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
-                              {recipe.recipe_name}
-                            </h4>
-                            <Heart className="w-5 h-5 text-red-500 fill-current" />
-                          </div>
-                          <div className="space-y-3">
-                            <p className="text-sm text-foreground/70">
-                              <span className="font-semibold">{recipe.ingredients.length}</span> ingredients
-                            </p>
-                            {recipe.missing_ingredients && recipe.missing_ingredients.length > 0 && (
-                              <Badge variant="outline" className="text-xs">
-                                {recipe.missing_ingredients.length} missing
-                              </Badge>
-                            )}
+                          <div className="flex-1 p-4 space-y-3 min-w-0">
+                            <div className="min-w-0">
+                              <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))] truncate">
+                                {recipe.recipe_name}
+                              </h4>
+                              <p className="text-sm text-foreground/70">
+                                {recipe.ingredients.length} ingredients
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {recipe.missing_ingredients && recipe.missing_ingredients.length > 0 && (
+                                <Badge variant="outline" className="text-xs">
+                                  {recipe.missing_ingredients.length} missing
+                                </Badge>
+                              )}
+                            </div>
                             
                             {cookedRecipeId === recipe.id ? (
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 pt-2">
                                 <input
                                   type="number"
                                   placeholder="Cost ($)"
@@ -667,6 +666,7 @@ const Home = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setCookedRecipeId(recipe.id)}
+                                className="w-full"
                               >
                                 <ChefHat className="w-4 h-4 mr-2" />
                                 Mark as Cooked
