@@ -134,13 +134,26 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log("AI response:", data);
+    console.log("AI response:", JSON.stringify(data, null, 2));
 
     const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall) {
+      throw new Error("No tool call found in AI response");
+    }
+
+    console.log("Tool call arguments:", toolCall.function?.arguments);
+
     const profile = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : null;
 
     if (!profile) {
-      throw new Error("Failed to generate structured profile");
+      throw new Error("Failed to parse profile from tool call");
+    }
+
+    console.log("Parsed profile:", profile);
+
+    // Validate that all required fields are present and non-empty
+    if (!profile.nutrition_balance || !profile.cuisine_variety || !profile.suggestions) {
+      throw new Error("Profile is missing required fields");
     }
 
     return new Response(

@@ -39,9 +39,20 @@ const ThinkingProcess = () => {
         throw profileError;
       }
 
+      console.log("Received profile data:", profileData);
+
       // Save profile to localStorage for the next page
       if (profileData) {
-        localStorage.setItem("cuisineProfile", JSON.stringify(profileData));
+        // Validate the profile data before saving
+        if (profileData.nutrition_balance && profileData.cuisine_variety && profileData.suggestions) {
+          localStorage.setItem("cuisineProfile", JSON.stringify(profileData));
+          console.log("Profile saved to localStorage:", profileData);
+        } else {
+          console.error("Profile data incomplete:", profileData);
+          throw new Error("Received incomplete profile data from AI");
+        }
+      } else {
+        throw new Error("No profile data received");
       }
 
       // Gather all user preferences from localStorage
