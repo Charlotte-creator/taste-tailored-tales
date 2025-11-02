@@ -73,7 +73,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a nutritionist analyzing food images to provide personalized taste insights."
+            content: "You are a friendly nutritionist analyzing food images to provide personalized taste insights. IMPORTANT: Always address the person directly using 'you' and 'your' - never refer to them as 'the user'. Write as if you're speaking directly to them in a warm, personal way."
           },
           {
             role: "user",
@@ -91,15 +91,15 @@ serve(async (req) => {
                 properties: {
                   nutrition_balance: {
                     type: "string",
-                    description: "2-3 sentences analyzing their nutritional balance and dietary patterns based on the food images"
+                    description: "2-3 sentences analyzing their nutritional balance and dietary patterns. Must start naturally without phrases like 'The user' or 'You have'. Example: 'You enjoy a balanced mix of proteins and carbs...' or 'Your meals show a preference for...'"
                   },
                   cuisine_variety: {
                     type: "string",
-                    description: "2-3 sentences about the variety and types of cuisines shown in the images"
+                    description: "2-3 sentences about the variety and types of cuisines they enjoy. Must use 'you' language. Example: 'You seem to enjoy a mix of classic American cuisine...' or 'Your taste leans towards...'"
                   },
                   suggestions: {
                     type: "string",
-                    description: "2-3 sentences with personalized recommendations to improve their diet based on what you see"
+                    description: "2-3 sentences with personalized recommendations. Must address them directly with 'you'. Example: 'To add more variety, you might try...' or 'Consider exploring...' Never start with 'Given the user' or similar phrases."
                   }
                 },
                 required: ["nutrition_balance", "cuisine_variety", "suggestions"],
