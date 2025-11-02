@@ -65,6 +65,8 @@ const FoodInput = () => {
 
   const handleContinue = () => {
     if (foods.filter(f => f.image || f.name).length >= 2) {
+      console.log("Saving foods to localStorage:", foods.length, "items");
+      console.log("Sample food item:", foods[0]);
       localStorage.setItem("userFoods", JSON.stringify(foods));
       navigate("/onboarding/allergy");
     } else {

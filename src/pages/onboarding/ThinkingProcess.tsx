@@ -18,7 +18,12 @@ const ThinkingProcess = () => {
   const analyzePreferences = async () => {
     try {
       // First, generate the taste profile from food images
-      const foods = JSON.parse(localStorage.getItem("userFoods") || "[]");
+      const foodsData = localStorage.getItem("userFoods");
+      console.log("Raw foods data from localStorage:", foodsData);
+      
+      const foods = foodsData ? JSON.parse(foodsData) : [];
+      console.log("Parsed foods array:", foods);
+      
       const allergies = JSON.parse(localStorage.getItem("userAllergies") || "[]");
 
       // Extract only the base64 image data from foods
@@ -26,8 +31,12 @@ const ThinkingProcess = () => {
         .filter((f: any) => f.image)
         .map((f: any) => f.image);
 
-      console.log("Generating taste profile from", foodImages.length, "food images");
-      console.log("Sample image data:", foodImages[0]?.substring(0, 50));
+      console.log("Extracted food images count:", foodImages.length);
+      console.log("First food item:", foods[0]);
+      if (foodImages.length > 0) {
+        console.log("Sample image data length:", foodImages[0]?.length);
+        console.log("Sample image data start:", foodImages[0]?.substring(0, 50));
+      }
 
       const { data: profileData, error: profileError } = await supabase.functions.invoke(
         "generate-taste-profile",
