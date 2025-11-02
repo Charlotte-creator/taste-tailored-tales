@@ -11,12 +11,8 @@ const CuisineSummary = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Generate a summary based on user's food preferences
-    const foods = JSON.parse(localStorage.getItem("userFoods") || "[]");
-    const allergies = JSON.parse(localStorage.getItem("userAllergies") || "[]");
-    
-    // Mock AI-generated summary
-    const generatedSummary = `You enjoy diverse, flavorful dishes with a preference for comfort foods and trying new cuisines${allergies.length > 0 ? `, while avoiding ${allergies.join(", ")}` : ""}.`;
+    // Get the AI-generated summary from localStorage
+    const generatedSummary = localStorage.getItem("cuisineSummary") || "";
     setSummary(generatedSummary);
   }, []);
 

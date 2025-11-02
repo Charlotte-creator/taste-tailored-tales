@@ -17,6 +17,7 @@ import CookAtHome from "./pages/onboarding/CookAtHome";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
 import ThinkingProcess from "./pages/onboarding/ThinkingProcess";
+import AnalyzingTaste from "./pages/onboarding/AnalyzingTaste";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/onboarding/name" element={<NameInput />} />
           <Route path="/onboarding/foods" element={<FoodInput />} />
           <Route path="/onboarding/allergy" element={<Allergy />} />
+          <Route path="/onboarding/analyzing-taste" element={<AnalyzingTaste />} />
           <Route path="/onboarding/cuisine-summary" element={<CuisineSummary />} />
           <Route path="/onboarding/setup-complete" element={<SetupComplete />} />
           <Route path="/onboarding/context" element={<DiningContext />} />

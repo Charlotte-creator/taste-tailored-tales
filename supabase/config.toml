@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.analyze-preferences]
 verify_jwt = false
+
+[functions.generate-taste-profile]
+verify_jwt = false

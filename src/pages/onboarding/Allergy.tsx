@@ -36,7 +36,7 @@ const Allergy = () => {
 
   const handleContinue = () => {
     localStorage.setItem("userAllergies", JSON.stringify(allergies));
-    navigate("/onboarding/cuisine-summary");
+    navigate("/onboarding/analyzing-taste");
   };
 
   return (
