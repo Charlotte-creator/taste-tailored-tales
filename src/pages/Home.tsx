@@ -59,6 +59,7 @@ const Home = () => {
   const [expenseInputs, setExpenseInputs] = useState<Record<string, string>>({});
   const [showAllRecipes, setShowAllRecipes] = useState(false);
   const [showAllRestaurants, setShowAllRestaurants] = useState(false);
+  const [userName, setUserName] = useState("");
   const [stats, setStats] = useState({
     homecookCount: 0,
     dineoutCount: 0,
@@ -70,6 +71,10 @@ const Home = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Get user name from localStorage
+      const name = localStorage.getItem("userName") || "";
+      setUserName(name);
+      
       // Get liked restaurants from localStorage
       const liked = JSON.parse(localStorage.getItem("likedRestaurants") || "[]");
       setLikedRestaurants(liked);
@@ -378,9 +383,20 @@ const Home = () => {
 
         {activeTab === "profile" && (
           <div className="space-y-6 animate-in fade-in duration-300">
-            <h2 className="text-3xl font-bold text-[hsl(var(--crumble-dark))]">
-              Your Dashboard
-            </h2>
+            {/* User Header */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">
+                  {userName ? userName[0].toUpperCase() : "U"}
+                </span>
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold text-[hsl(var(--crumble-dark))]">
+                  {userName ? `${userName}'s Dashboard` : "Your Dashboard"}
+                </h2>
+                <p className="text-foreground/70">Welcome back!</p>
+              </div>
+            </div>
 
             {/* Stats Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
