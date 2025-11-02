@@ -156,8 +156,52 @@ Format as JSON:
         };
       }
 
+      // Generate images for each recipe
+      console.log("Generating images for recipes...");
+      const recipesWithImages = await Promise.all(
+        recipeData.recipes.map(async (recipe: any) => {
+          try {
+            const imagePrompt = `A professional food photography shot of ${recipe.name}, beautifully plated on a white ceramic dish with garnish, overhead view, natural lighting, appetizing and colorful, high quality food photo`;
+            
+            const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${LOVABLE_API_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                model: "google/gemini-2.5-flash-image",
+                messages: [
+                  {
+                    role: "user",
+                    content: imagePrompt
+                  }
+                ],
+                modalities: ["image", "text"]
+              }),
+            });
+
+            if (imageResponse.ok) {
+              const imageData = await imageResponse.json();
+              const imageUrl = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+              
+              if (imageUrl) {
+                console.log(`Image generated successfully for ${recipe.name}`);
+                return { ...recipe, image: imageUrl };
+              }
+            }
+            
+            console.warn(`Failed to generate image for ${recipe.name}, using fallback`);
+            return recipe;
+          } catch (imageError) {
+            console.error(`Error generating image for ${recipe.name}:`, imageError);
+            return recipe;
+          }
+        })
+      );
+
       return new Response(
-        JSON.stringify(recipeData),
+        JSON.stringify({ recipes: recipesWithImages }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
