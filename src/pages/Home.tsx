@@ -706,26 +706,31 @@ const Home = () => {
                   <div className="grid gap-4">
                     {likedRestaurants.slice(0, showAllRestaurants ? likedRestaurants.length : 2).map((restaurant, index) => (
                     <Card key={index} className="overflow-hidden">
-                      <div className="flex gap-4">
+                      <div className="relative h-32">
                         <img
                           src={restaurant.image}
                           alt={restaurant.name}
-                          className="w-32 h-32 object-cover flex-shrink-0"
+                          className="w-full h-full object-cover"
                         />
-                        <div className="flex-1 p-4 space-y-3 min-w-0">
-                          <div className="min-w-0">
+                      </div>
+                      <div className="p-6">
+                        <div className="flex justify-between items-start mb-3">
+                          <div className="flex-1 min-w-0">
                             <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))] truncate">
                               {restaurant.name}
                             </h4>
                             <p className="text-sm text-foreground/70 truncate">{restaurant.restaurant}</p>
                           </div>
+                          <Heart className="w-5 h-5 text-red-500 fill-current flex-shrink-0 ml-2" />
+                        </div>
+                        <div className="space-y-3">
                           <div className="flex flex-wrap gap-2">
                             <Badge variant="secondary">{restaurant.cuisine}</Badge>
                             <Badge variant="outline">{restaurant.price}</Badge>
                           </div>
                           
                           {visitedRestaurantId === index ? (
-                            <div className="flex gap-2 pt-2">
+                            <div className="flex gap-2">
                               <input
                                 type="number"
                                 placeholder="Cost ($)"
