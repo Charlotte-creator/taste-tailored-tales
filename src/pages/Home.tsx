@@ -57,6 +57,8 @@ const Home = () => {
   const [cookedRecipeId, setCookedRecipeId] = useState<string | null>(null);
   const [visitedRestaurantId, setVisitedRestaurantId] = useState<number | null>(null);
   const [expenseInputs, setExpenseInputs] = useState<Record<string, string>>({});
+  const [showAllRecipes, setShowAllRecipes] = useState(false);
+  const [showAllRestaurants, setShowAllRestaurants] = useState(false);
   const [stats, setStats] = useState({
     homecookCount: 0,
     dineoutCount: 0,
@@ -545,11 +547,22 @@ const Home = () => {
             {/* Liked Recipes */}
             {likedRecipes.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold mb-4 text-[hsl(var(--crumble-dark))]">
-                  Liked Recipes
-                </h3>
-                <div className="grid gap-4">
-                  {likedRecipes.map((recipe, index) => {
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-[hsl(var(--crumble-dark))]">
+                    Liked Recipes
+                  </h3>
+                  {likedRecipes.length > 2 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAllRecipes(!showAllRecipes)}
+                    >
+                      {showAllRecipes ? 'Show Less' : `Show All (${likedRecipes.length})`}
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-4 relative">
+                  {likedRecipes.slice(0, showAllRecipes ? likedRecipes.length : 2).map((recipe, index) => {
                     // Use a variety of food images
                     const foodImages = [
                       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop", // salad bowl
@@ -647,11 +660,22 @@ const Home = () => {
             {/* Liked Restaurants */}
             {likedRestaurants.length > 0 && (
               <div>
-                <h3 className="text-xl font-bold mb-4 text-[hsl(var(--crumble-dark))]">
-                  Liked Restaurants
-                </h3>
-                <div className="grid gap-4">
-                  {likedRestaurants.map((restaurant, index) => (
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-[hsl(var(--crumble-dark))]">
+                    Liked Restaurants
+                  </h3>
+                  {likedRestaurants.length > 2 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAllRestaurants(!showAllRestaurants)}
+                    >
+                      {showAllRestaurants ? 'Show Less' : `Show All (${likedRestaurants.length})`}
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-4 relative">
+                  {likedRestaurants.slice(0, showAllRestaurants ? likedRestaurants.length : 2).map((restaurant, index) => (
                     <Card key={index} className="overflow-hidden">
                       <div className="flex gap-4">
                         <img
