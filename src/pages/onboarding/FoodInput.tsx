@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,11 +14,17 @@ interface FoodItem {
 
 const FoodInput = () => {
   const [foods, setFoods] = useState<FoodItem[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   const addFoodSlot = () => {
     if (foods.length < 6) {
-      setFoods([...foods, { id: Date.now().toString() }]);
+      const newFood = { id: Date.now().toString() };
+      setFoods([...foods, newFood]);
+      // Trigger file picker immediately after adding the slot
+      setTimeout(() => {
+        fileInputRef.current?.click();
+      }, 100);
     }
   };
 
@@ -35,6 +41,28 @@ const FoodInput = () => {
     }
   };
 
+  const handleNewImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        // Update the most recently added food item
+        setFoods(prev => {
+          const lastIndex = prev.length - 1;
+          if (lastIndex >= 0) {
+            const updated = [...prev];
+            updated[lastIndex] = { ...updated[lastIndex], image: reader.result as string };
+            return updated;
+          }
+          return prev;
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+    // Reset the input so the same file can be selected again
+    event.target.value = '';
+  };
+
   const handleContinue = () => {
     if (foods.filter(f => f.image || f.name).length >= 2) {
       localStorage.setItem("userFoods", JSON.stringify(foods));
@@ -47,6 +75,14 @@ const FoodInput = () => {
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col p-6">
       <BackButton />
+      {/* Hidden file input for new photos */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleNewImageUpload}
+      />
       <div className="w-full max-w-md mx-auto flex-1 flex flex-col justify-between py-12 animate-in fade-in duration-500">
         {/* Progress Bar */}
         <div className="w-full h-1 bg-white/30 rounded-full overflow-hidden">
