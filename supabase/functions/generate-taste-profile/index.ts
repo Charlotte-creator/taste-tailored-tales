@@ -11,34 +11,48 @@ serve(async (req) => {
   }
 
   try {
-    const { foods, allergies } = await req.json();
-    console.log("Generating taste profile for:", { foods, allergies });
+    const { foodImages, allergies } = await req.json();
+    console.log("Generating taste profile from", foodImages?.length || 0, "images");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Build the prompt based on user data
-    let prompt = "Analyze the following food preferences and create a structured profile:\n\n";
-    
-    if (foods && foods.length > 0) {
-      const foodNames = foods
-        .filter((f: any) => f.name)
-        .map((f: any) => f.name)
-        .join(", ");
-      if (foodNames) {
-        prompt += `Favorite foods: ${foodNames}\n`;
-      }
+    if (!foodImages || foodImages.length === 0) {
+      throw new Error("No food images provided");
     }
+
+    // Build the prompt for vision analysis
+    let prompt = "Analyze these food images and create a personalized taste profile. ";
     
     if (allergies && allergies.length > 0) {
-      prompt += `Allergies to avoid: ${allergies.join(", ")}\n`;
+      prompt += `The user has allergies to: ${allergies.join(", ")}. `;
     }
     
-    prompt += "\nProvide insights on their nutrition balance, cuisine variety preferences, and personalized suggestions.";
+    prompt += "Based on the foods shown, provide detailed insights about their taste preferences.";
 
-    console.log("Sending prompt to AI:", prompt);
+    // Build content array with images
+    const content: any[] = [
+      {
+        type: "text",
+        text: prompt
+      }
+    ];
+
+    // Add each food image
+    for (const imageData of foodImages) {
+      // Remove data URL prefix if present
+      const base64Data = imageData.replace(/^data:image\/[a-z]+;base64,/, "");
+      content.push({
+        type: "image_url",
+        image_url: {
+          url: `data:image/jpeg;base64,${base64Data}`
+        }
+      });
+    }
+
+    console.log("Sending", content.length - 1, "images to AI for analysis");
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -51,11 +65,11 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a nutritionist analyzing food preferences to provide personalized insights."
+            content: "You are a nutritionist analyzing food images to provide personalized taste insights."
           },
           {
             role: "user",
-            content: prompt
+            content: content
           }
         ],
         tools: [
@@ -63,21 +77,21 @@ serve(async (req) => {
             type: "function",
             function: {
               name: "create_taste_profile",
-              description: "Generate a structured taste profile with nutrition, variety, and suggestions",
+              description: "Generate a structured taste profile with nutrition, variety, and suggestions based on food images",
               parameters: {
                 type: "object",
                 properties: {
                   nutrition_balance: {
                     type: "string",
-                    description: "2-3 sentences about their nutritional balance and dietary patterns"
+                    description: "2-3 sentences analyzing their nutritional balance and dietary patterns based on the food images"
                   },
                   cuisine_variety: {
                     type: "string",
-                    description: "2-3 sentences about the variety and types of cuisines they enjoy"
+                    description: "2-3 sentences about the variety and types of cuisines shown in the images"
                   },
                   suggestions: {
                     type: "string",
-                    description: "2-3 sentences with personalized recommendations to improve their diet"
+                    description: "2-3 sentences with personalized recommendations to improve their diet based on what you see"
                   }
                 },
                 required: ["nutrition_balance", "cuisine_variety", "suggestions"],

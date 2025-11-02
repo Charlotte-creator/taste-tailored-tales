@@ -27,13 +27,20 @@ const ThinkingProcess = () => {
 
   const analyzePreferences = async () => {
     try {
-      // First, generate the taste profile
-      const foods = JSON.parse(localStorage.getItem("selectedFoods") || "[]");
+      // First, generate the taste profile from food images
+      const foods = JSON.parse(localStorage.getItem("userFoods") || "[]");
       const allergies = JSON.parse(localStorage.getItem("userAllergies") || "[]");
+
+      // Filter out foods that have images
+      const foodImages = foods
+        .filter((f: any) => f.image)
+        .map((f: any) => f.image);
+
+      console.log("Generating profile from", foodImages.length, "food images");
 
       const { data: profileData, error: profileError } = await supabase.functions.invoke(
         "generate-taste-profile",
-        { body: { foods, allergies } }
+        { body: { foodImages, allergies } }
       );
 
       if (profileError) {
