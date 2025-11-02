@@ -561,8 +561,9 @@ const Home = () => {
                     </Button>
                   )}
                 </div>
-                <div className="grid gap-4 relative">
-                  {likedRecipes.slice(0, showAllRecipes ? likedRecipes.length : 2).map((recipe, index) => {
+                <div className="relative">
+                  <div className="grid gap-4">
+                    {likedRecipes.slice(0, showAllRecipes ? likedRecipes.length : 2).map((recipe, index) => {
                     // Use a variety of food images
                     const foodImages = [
                       "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop", // salad bowl
@@ -651,8 +652,12 @@ const Home = () => {
                           </div>
                         </div>
                       </Card>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                  {!showAllRecipes && likedRecipes.length > 2 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
+                  )}
                 </div>
               </div>
             )}
@@ -674,8 +679,9 @@ const Home = () => {
                     </Button>
                   )}
                 </div>
-                <div className="grid gap-4 relative">
-                  {likedRestaurants.slice(0, showAllRestaurants ? likedRestaurants.length : 2).map((restaurant, index) => (
+                <div className="relative">
+                  <div className="grid gap-4">
+                    {likedRestaurants.slice(0, showAllRestaurants ? likedRestaurants.length : 2).map((restaurant, index) => (
                     <Card key={index} className="overflow-hidden">
                       <div className="flex gap-4">
                         <img
@@ -745,6 +751,10 @@ const Home = () => {
                       </div>
                     </Card>
                   ))}
+                  </div>
+                  {!showAllRestaurants && likedRestaurants.length > 2 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background via-background/80 to-transparent pointer-events-none" />
+                  )}
                 </div>
               </div>
             )}
