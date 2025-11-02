@@ -463,6 +463,85 @@ const Home = () => {
               </Card>
             </div>
 
+            {/* Meal History by Date */}
+            {mealHistory.length > 0 && (
+              <div>
+                <h3 className="text-xl font-bold mb-4 text-[hsl(var(--crumble-dark))]">
+                  Meal History
+                </h3>
+                <div className="space-y-4">
+                  {(() => {
+                    // Group meals by date
+                    const groupedByDate: Record<string, any[]> = {};
+                    mealHistory.forEach((meal) => {
+                      const date = new Date(meal.created_at).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      });
+                      if (!groupedByDate[date]) {
+                        groupedByDate[date] = [];
+                      }
+                      groupedByDate[date].push(meal);
+                    });
+
+                    return Object.entries(groupedByDate).map(([date, meals]) => (
+                      <div key={date}>
+                        <h4 className="text-lg font-semibold mb-3 text-[hsl(var(--crumble-dark))]">
+                          {date}
+                        </h4>
+                        <div className="grid gap-3 ml-4">
+                          {meals.map((meal, idx) => (
+                            <Card key={idx} className="p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  {meal.meal_type === 'homecook' ? (
+                                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                      <ChefHat className="w-5 h-5 text-primary" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center">
+                                      <Store className="w-5 h-5 text-accent" />
+                                    </div>
+                                  )}
+                                  <div>
+                                    <p className="font-semibold text-[hsl(var(--crumble-dark))]">
+                                      {meal.meal_name}
+                                    </p>
+                                    {meal.restaurant_name && (
+                                      <p className="text-sm text-foreground/70">
+                                        at {meal.restaurant_name}
+                                      </p>
+                                    )}
+                                    <p className="text-xs text-foreground/60">
+                                      {new Date(meal.created_at).toLocaleTimeString('en-US', {
+                                        hour: 'numeric',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <Badge variant={meal.meal_type === 'homecook' ? 'default' : 'secondary'}>
+                                    {meal.meal_type === 'homecook' ? 'Home Cook' : 'Dine Out'}
+                                  </Badge>
+                                  {meal.expense && (
+                                    <p className="text-sm font-semibold mt-1 text-[hsl(var(--crumble-dark))]">
+                                      ${parseFloat(String(meal.expense)).toFixed(2)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            )}
+
             {/* Liked Recipes */}
             {likedRecipes.length > 0 && (
               <div>
@@ -578,14 +657,14 @@ const Home = () => {
                         <img
                           src={restaurant.image}
                           alt={restaurant.name}
-                          className="w-32 h-32 object-cover"
+                          className="w-32 h-32 object-cover flex-shrink-0"
                         />
-                        <div className="flex-1 p-4 space-y-3">
+                        <div className="flex-1 p-4 space-y-3 min-w-0">
                           <div>
-                            <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))]">
+                            <h4 className="text-lg font-bold text-[hsl(var(--crumble-dark))] truncate">
                               {restaurant.name}
                             </h4>
-                            <p className="text-sm text-foreground/70">{restaurant.restaurant}</p>
+                            <p className="text-sm text-foreground/70 truncate">{restaurant.restaurant}</p>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             <Badge variant="secondary">{restaurant.cuisine}</Badge>
@@ -632,6 +711,7 @@ const Home = () => {
                               size="sm"
                               variant="outline"
                               onClick={() => setVisitedRestaurantId(index)}
+                              className="w-full sm:w-auto"
                             >
                               <Store className="w-4 h-4 mr-2" />
                               Mark as Visited
@@ -645,7 +725,7 @@ const Home = () => {
               </div>
             )}
 
-            {likedRecipes.length === 0 && likedRestaurants.length === 0 && stats.homecookCount === 0 && stats.dineoutCount === 0 && (
+            {likedRecipes.length === 0 && likedRestaurants.length === 0 && mealHistory.length === 0 && (
               <Card className="p-8">
                 <p className="text-foreground/70 text-center py-12">
                   Start discovering meals to see your personalized dashboard!
