@@ -5,10 +5,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { UtensilsCrossed, User, Users, Sparkles, MapPin, Heart, MessageCircle, ChefHat, Store, DollarSign, TrendingUp } from "lucide-react";
+import { UtensilsCrossed, User, Users, Sparkles, MapPin, Heart, MessageCircle, ChefHat, Store, DollarSign, TrendingUp, LogOut } from "lucide-react";
 import BackButton from "@/components/BackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth, signOut } from "@/hooks/useAuth";
 
 type Tab = "meal" | "profile" | "community";
 
@@ -50,6 +51,7 @@ const communityPosts = [
 ];
 
 const Home = () => {
+  const { user, initializing } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>("meal");
   const [likedRestaurants, setLikedRestaurants] = useState<any[]>([]);
   const [likedRecipes, setLikedRecipes] = useState<any[]>([]);
@@ -69,10 +71,25 @@ const Home = () => {
   });
   const navigate = useNavigate();
 
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!initializing && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, initializing, navigate]);
+
   useEffect(() => {
     const fetchData = async () => {
-      // Get user name from localStorage
-      const name = localStorage.getItem("userName") || "";
+      if (!user) return;
+
+      // Get user name from profile
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      const name = profile?.first_name || localStorage.getItem("userName") || "";
       setUserName(name);
       
       // Clean up duplicate restaurants in localStorage
@@ -88,16 +105,13 @@ const Home = () => {
       }
       setLikedRestaurants(uniqueRestaurants);
 
-      // If logged in, load from backend; else fall back to local
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-
-      if (userId) {
+      // Load from backend (user is already authenticated)
+      if (user?.id) {
         // Fetch liked recipes
         const { data: recipes } = await supabase
           .from('liked_recipes')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
         setLikedRecipes(recipes || []);
 
@@ -105,7 +119,7 @@ const Home = () => {
         const { data: history } = await supabase
           .from('meal_history')
           .select('*')
-          .eq('user_id', userId)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false });
         setMealHistory(history || []);
 
@@ -125,45 +139,11 @@ const Home = () => {
             dineoutExpense
           });
         }
-      } else {
-        // Not logged in: load from localStorage
-        const localLiked = JSON.parse(localStorage.getItem('likedRecipes') || '[]');
-        const mapped = localLiked.map((r: any, idx: number) => ({
-          id: `local-${idx}`,
-          recipe_name: r.name,
-          ingredients: r.ingredients,
-          instructions: r.instructions,
-          missing_ingredients: r.missingIngredients || [],
-        }));
-        setLikedRecipes(mapped);
-        
-        // Load local meal history
-        const localHistory = JSON.parse(localStorage.getItem('mealHistory') || '[]');
-        setMealHistory(localHistory);
-        
-        // Calculate stats from local data
-        if (localHistory.length > 0) {
-          const homecook = localHistory.filter(m => m.meal_type === 'homecook');
-          const dineout = localHistory.filter(m => m.meal_type === 'dineout');
-          const totalExpense = localHistory.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
-          const homecookExpense = homecook.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
-          const dineoutExpense = dineout.reduce((sum, m) => sum + (parseFloat(String(m.expense || 0))), 0);
-
-          setStats({
-            homecookCount: homecook.length,
-            dineoutCount: dineout.length,
-            totalExpense,
-            homecookExpense,
-            dineoutExpense
-          });
-        } else {
-          setStats({ homecookCount: 0, dineoutCount: 0, totalExpense: 0, homecookExpense: 0, dineoutExpense: 0 });
-        }
       }
     };
 
     fetchData();
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   const handleStartDiscovery = () => {
     navigate("/onboarding/context");
@@ -185,21 +165,13 @@ const Home = () => {
         created_at: new Date().toISOString()
       };
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      if (!user?.id) return;
       
-      if (userId) {
-        // Logged in: save to backend
-        await supabase.from('meal_history').insert({
-          user_id: userId,
-          ...mealEntry
-        });
-      } else {
-        // Guest: save to localStorage
-        const localHistory = JSON.parse(localStorage.getItem('mealHistory') || '[]');
-        localHistory.push(mealEntry);
-        localStorage.setItem('mealHistory', JSON.stringify(localHistory));
-      }
+      // Save to backend
+      await supabase.from('meal_history').insert({
+        user_id: user.id,
+        ...mealEntry
+      });
 
       toast.success("Meal tracked successfully!");
       setCookedRecipeId(null);
@@ -210,17 +182,12 @@ const Home = () => {
       });
       
       // Refresh data
-      let history = [];
-      if (userId) {
-        const { data } = await supabase
-          .from('meal_history')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-        history = data || [];
-      } else {
-        history = JSON.parse(localStorage.getItem('mealHistory') || '[]');
-      }
+      const { data } = await supabase
+        .from('meal_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      const history = data || [];
       setMealHistory(history);
 
       // Recalculate stats
@@ -262,19 +229,12 @@ const Home = () => {
         created_at: new Date().toISOString()
       };
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      if (!user?.id) return;
       
-      if (userId) {
-        await supabase.from('meal_history').insert({
-          user_id: userId,
-          ...mealEntry
-        });
-      } else {
-        const localHistory = JSON.parse(localStorage.getItem('mealHistory') || '[]');
-        localHistory.push(mealEntry);
-        localStorage.setItem('mealHistory', JSON.stringify(localHistory));
-      }
+      await supabase.from('meal_history').insert({
+        user_id: user.id,
+        ...mealEntry
+      });
 
       toast.success("Restaurant visit tracked!");
       setVisitedRestaurantId(null);
@@ -285,17 +245,12 @@ const Home = () => {
       });
       
       // Refresh data
-      let history = [];
-      if (userId) {
-        const { data } = await supabase
-          .from('meal_history')
-          .select('*')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
-        history = data || [];
-      } else {
-        history = JSON.parse(localStorage.getItem('mealHistory') || '[]');
-      }
+      const { data } = await supabase
+        .from('meal_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      const history = data || [];
       setMealHistory(history);
 
       // Recalculate stats
@@ -320,15 +275,35 @@ const Home = () => {
     }
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/auth", { replace: true });
+  };
+
+  if (initializing) {
+    return (
+      <div className="min-h-screen hexagon-pattern flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-foreground/70">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col">
       <BackButton />
       {/* Header */}
       <header className="bg-white border-b border-border p-4">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-2xl font-bold text-[hsl(var(--crumble-dark))] text-center">
+        <div className="max-w-6xl mx-auto flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[hsl(var(--crumble-dark))]">
             Crumble
           </h1>
+          <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
         </div>
       </header>
 

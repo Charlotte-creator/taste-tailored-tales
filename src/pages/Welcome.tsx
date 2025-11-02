@@ -32,7 +32,7 @@ const Welcome = () => {
             variant="dark" 
             size="lg" 
             className="w-full"
-            onClick={() => navigate('/onboarding/name')}
+            onClick={() => navigate('/auth')}
           >
             Get Started
           </Button>
@@ -41,9 +41,9 @@ const Welcome = () => {
             variant="light" 
             size="lg" 
             className="w-full"
-            onClick={() => navigate('/onboarding/name')}
+            onClick={() => navigate('/auth')}
           >
-            Continue as Guest
+            Log In
           </Button>
         </div>
 

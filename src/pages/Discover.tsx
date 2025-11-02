@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { X, Check, Star, Info, MapPin, Clock, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import BackButton from "@/components/BackButton";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 // Mock restaurant data
 const mockRestaurants = [
@@ -54,10 +56,19 @@ const mockRestaurants = [
 ];
 
 const Discover = () => {
+  const { user, initializing } = useAuth();
+  const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [likedRestaurant, setLikedRestaurant] = useState<typeof mockRestaurants[0] | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!initializing && !user) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, initializing, navigate]);
 
   const currentRestaurant = mockRestaurants[currentIndex];
 
@@ -89,10 +100,9 @@ const Discover = () => {
           created_at: new Date().toISOString()
         };
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user?.id) {
+        if (user?.id) {
           await supabase.from('meal_history').insert({
-            user_id: session.user.id,
+            user_id: user.id,
             ...mealEntry
           });
         } else {
