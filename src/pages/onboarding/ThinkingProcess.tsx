@@ -16,10 +16,10 @@ const ThinkingProcess = () => {
   }, []);
 
   useEffect(() => {
-    // Auto-navigate to discover after 4 seconds once analysis is loaded
+    // Auto-navigate to cuisine summary after 4 seconds once analysis is loaded
     if (!isLoading && analysis) {
       const timer = setTimeout(() => {
-        navigate("/discover");
+        navigate("/onboarding/cuisine-summary");
       }, 4000);
       return () => clearTimeout(timer);
     }
@@ -27,10 +27,28 @@ const ThinkingProcess = () => {
 
   const analyzePreferences = async () => {
     try {
+      // First, generate the taste profile
+      const foods = JSON.parse(localStorage.getItem("selectedFoods") || "[]");
+      const allergies = JSON.parse(localStorage.getItem("userAllergies") || "[]");
+
+      const { data: profileData, error: profileError } = await supabase.functions.invoke(
+        "generate-taste-profile",
+        { body: { foods, allergies } }
+      );
+
+      if (profileError) {
+        console.error("Error generating profile:", profileError);
+        throw profileError;
+      }
+
+      // Save profile to localStorage for the next page
+      if (profileData) {
+        localStorage.setItem("cuisineProfile", JSON.stringify(profileData));
+      }
+
       // Gather all user preferences from localStorage
       const preferences = {
-        allergies: JSON.parse(localStorage.getItem("userAllergies") || "[]"),
-        cuisineSummary: localStorage.getItem("cuisineSummary") || "",
+        allergies,
         diningContext: localStorage.getItem("diningContext") || "",
         priority: localStorage.getItem("priority") || "",
         ...JSON.parse(localStorage.getItem("constraints") || "{}"),
@@ -63,7 +81,7 @@ const ThinkingProcess = () => {
   };
 
   const handleContinue = () => {
-    navigate("/discover");
+    navigate("/onboarding/cuisine-summary");
   };
 
   return (

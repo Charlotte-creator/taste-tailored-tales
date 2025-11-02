@@ -20,7 +20,7 @@ serve(async (req) => {
     }
 
     // Build the prompt based on user data
-    let prompt = "Based on the following information, create a concise, engaging taste profile summary (1-2 sentences max):\n\n";
+    let prompt = "Analyze the following food preferences and create a structured profile:\n\n";
     
     if (foods && foods.length > 0) {
       const foodNames = foods
@@ -36,7 +36,7 @@ serve(async (req) => {
       prompt += `Allergies to avoid: ${allergies.join(", ")}\n`;
     }
     
-    prompt += "\nCreate a warm, personalized summary that captures their taste preferences. Keep it under 50 words and make it sound natural and conversational.";
+    prompt += "\nProvide insights on their nutrition balance, cuisine variety preferences, and personalized suggestions.";
 
     console.log("Sending prompt to AI:", prompt);
 
@@ -51,13 +51,42 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that creates personalized food taste profiles. Be warm, engaging, and concise."
+            content: "You are a nutritionist analyzing food preferences to provide personalized insights."
           },
           {
             role: "user",
             content: prompt
           }
         ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "create_taste_profile",
+              description: "Generate a structured taste profile with nutrition, variety, and suggestions",
+              parameters: {
+                type: "object",
+                properties: {
+                  nutrition_balance: {
+                    type: "string",
+                    description: "2-3 sentences about their nutritional balance and dietary patterns"
+                  },
+                  cuisine_variety: {
+                    type: "string",
+                    description: "2-3 sentences about the variety and types of cuisines they enjoy"
+                  },
+                  suggestions: {
+                    type: "string",
+                    description: "2-3 sentences with personalized recommendations to improve their diet"
+                  }
+                },
+                required: ["nutrition_balance", "cuisine_variety", "suggestions"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "create_taste_profile" } }
       }),
     });
 
@@ -85,10 +114,19 @@ serve(async (req) => {
     const data = await response.json();
     console.log("AI response:", data);
 
-    const summary = data.choices?.[0]?.message?.content || "";
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    const profile = toolCall?.function?.arguments ? JSON.parse(toolCall.function.arguments) : null;
+
+    if (!profile) {
+      throw new Error("Failed to generate structured profile");
+    }
 
     return new Response(
-      JSON.stringify({ summary }),
+      JSON.stringify({ 
+        nutrition_balance: profile.nutrition_balance,
+        cuisine_variety: profile.cuisine_variety,
+        suggestions: profile.suggestions
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

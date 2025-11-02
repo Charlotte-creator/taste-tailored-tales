@@ -4,21 +4,54 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowRight, Sparkles } from "lucide-react";
 import BackButton from "@/components/BackButton";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const CuisineSummary = () => {
-  const [summary, setSummary] = useState("");
+  const [nutritionBalance, setNutritionBalance] = useState("");
+  const [cuisineVariety, setCuisineVariety] = useState("");
+  const [suggestions, setSuggestions] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Get the AI-generated summary from localStorage
-    const generatedSummary = localStorage.getItem("cuisineSummary") || "";
-    setSummary(generatedSummary);
+    // Get the AI-generated profile from localStorage
+    const profile = localStorage.getItem("cuisineProfile");
+    if (profile) {
+      const parsed = JSON.parse(profile);
+      setNutritionBalance(parsed.nutrition_balance || "");
+      setCuisineVariety(parsed.cuisine_variety || "");
+      setSuggestions(parsed.suggestions || "");
+    }
   }, []);
 
-  const handleConfirm = () => {
-    localStorage.setItem("cuisineSummary", summary);
-    navigate("/onboarding/setup-complete");
+  const handleConfirm = async () => {
+    if (!user) return;
+    
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          nutrition_balance: nutritionBalance,
+          cuisine_variety: cuisineVariety,
+          suggestions: suggestions
+        })
+        .eq("id", user.id);
+
+      if (error) throw error;
+
+      toast.success("Profile saved successfully!");
+      navigate("/onboarding/setup-complete");
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast.error("Failed to save profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -44,28 +77,58 @@ const CuisineSummary = () => {
             </p>
           </div>
 
-          <div className="space-y-4">
-            {isEditing ? (
-              <Textarea
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                className="min-h-[120px] text-lg bg-white"
-                autoFocus
-              />
-            ) : (
-              <div className="glass-card p-6 rounded-lg border-2 border-primary/20">
-                <p className="text-lg text-[hsl(var(--crumble-dark))] leading-relaxed">
-                  "{summary}"
-                </p>
-              </div>
-            )}
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-[hsl(var(--crumble-dark))]">Nutrition Balance</h3>
+              {isEditing ? (
+                <Textarea
+                  value={nutritionBalance}
+                  onChange={(e) => setNutritionBalance(e.target.value)}
+                  className="min-h-[80px] bg-white"
+                />
+              ) : (
+                <div className="glass-card p-4 rounded-lg border border-primary/20">
+                  <p className="text-[hsl(var(--crumble-dark))] leading-relaxed">{nutritionBalance}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-[hsl(var(--crumble-dark))]">Cuisine Variety</h3>
+              {isEditing ? (
+                <Textarea
+                  value={cuisineVariety}
+                  onChange={(e) => setCuisineVariety(e.target.value)}
+                  className="min-h-[80px] bg-white"
+                />
+              ) : (
+                <div className="glass-card p-4 rounded-lg border border-primary/20">
+                  <p className="text-[hsl(var(--crumble-dark))] leading-relaxed">{cuisineVariety}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="font-semibold text-[hsl(var(--crumble-dark))]">Suggestions</h3>
+              {isEditing ? (
+                <Textarea
+                  value={suggestions}
+                  onChange={(e) => setSuggestions(e.target.value)}
+                  className="min-h-[80px] bg-white"
+                />
+              ) : (
+                <div className="glass-card p-4 rounded-lg border border-primary/20">
+                  <p className="text-[hsl(var(--crumble-dark))] leading-relaxed">{suggestions}</p>
+                </div>
+              )}
+            </div>
 
             <Button
               variant="outline"
               onClick={() => setIsEditing(!isEditing)}
               className="w-full"
             >
-              {isEditing ? "Preview" : "Edit Summary"}
+              {isEditing ? "Done Editing" : "Edit Profile"}
             </Button>
           </div>
 
@@ -81,8 +144,9 @@ const CuisineSummary = () => {
             size="lg"
             className="w-full"
             onClick={handleConfirm}
+            disabled={isSaving}
           >
-            That's correct!
+            {isSaving ? "Saving..." : "Save & Continue"}
             <ArrowRight className="w-5 h-5" />
           </Button>
         </div>
