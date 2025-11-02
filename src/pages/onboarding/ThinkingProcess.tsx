@@ -15,16 +15,6 @@ const ThinkingProcess = () => {
     analyzePreferences();
   }, []);
 
-  useEffect(() => {
-    // Auto-navigate to cuisine summary after 4 seconds once analysis is loaded
-    if (!isLoading && analysis) {
-      const timer = setTimeout(() => {
-        navigate("/onboarding/cuisine-summary");
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, analysis, navigate]);
-
   const analyzePreferences = async () => {
     try {
       // First, generate the taste profile from food images
@@ -89,7 +79,7 @@ const ThinkingProcess = () => {
   };
 
   const handleContinue = () => {
-    navigate("/onboarding/cuisine-summary");
+    navigate("/discover");
   };
 
   return (
