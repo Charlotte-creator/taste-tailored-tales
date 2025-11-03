@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const ThinkingProcess = () => {
   const [analysis, setAnalysis] = useState("");
+  const [tasteProfile, setTasteProfile] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -56,6 +57,8 @@ const ThinkingProcess = () => {
         if (profileData.nutrition_balance && profileData.cuisine_variety && profileData.suggestions) {
           localStorage.setItem("cuisineProfile", JSON.stringify(profileData));
           console.log("Profile saved to localStorage:", profileData);
+          // Set taste profile summary for display
+          setTasteProfile(`Your taste profile shows ${profileData.cuisine_variety.toLowerCase()}`);
         } else {
           console.error("Profile data incomplete:", profileData);
           throw new Error("Received incomplete profile data from AI");
@@ -136,6 +139,14 @@ const ThinkingProcess = () => {
                 </div>
                 
                 <div className="space-y-3">
+                  {tasteProfile && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-primary text-lg flex-shrink-0">•</span>
+                      <p className="text-foreground/80 leading-relaxed font-medium">
+                        {tasteProfile}
+                      </p>
+                    </div>
+                  )}
                   {analysis.split('\n').filter(line => line.trim()).map((line, i) => (
                     <div key={i} className="flex items-start gap-3">
                       <span className="text-primary text-lg flex-shrink-0">•</span>
