@@ -282,6 +282,37 @@ const CookAtHome = () => {
                         ))}
                       </div>
                     </div>
+                    <div className="mt-4">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Add an ingredient..."
+                          className="flex-1 px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                              const newIngredient = e.currentTarget.value.trim();
+                              setExtractedIngredients([...extractedIngredients, newIngredient]);
+                              e.currentTarget.value = '';
+                            }
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                            if (input && input.value.trim()) {
+                              const newIngredient = input.value.trim();
+                              setExtractedIngredients([...extractedIngredients, newIngredient]);
+                              input.value = '';
+                            }
+                          }}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </div>
                     <p className="text-xs text-foreground/60 mt-2">
                       Note: We'll assume you have basic ingredients like oil, salt, and black pepper
                     </p>
