@@ -3,65 +3,36 @@ import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, Check, Star, Info, MapPin, Clock, DollarSign } from "lucide-react";
+import { X, Check, Star, Info, MapPin, Clock, DollarSign, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import BackButton from "@/components/BackButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-// Mock restaurant data
-const mockRestaurants = [
-  {
-    id: 1,
-    name: "Spicy Dragon Noodles",
-    restaurant: "Dragon Bowl",
-    image: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800",
-    cuisine: "Asian Fusion",
-    dietSafe: ["Gluten-free option"],
-    price: "$$",
-    eta: "15 min",
-    distance: "0.8 mi",
-    calories: "~650 cal",
-    totalPrice: "$16.50",
-    why: "Under 20 min, matches spicy preference",
-  },
-  {
-    id: 2,
-    name: "Classic Margherita",
-    restaurant: "Bella Pizza",
-    image: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800",
-    cuisine: "Italian",
-    dietSafe: ["Vegetarian"],
-    price: "$",
-    eta: "12 min",
-    distance: "0.5 mi",
-    calories: "~580 cal",
-    totalPrice: "$13.00",
-    why: "Quick delivery, comfort food",
-  },
-  {
-    id: 3,
-    name: "Buddha Bowl",
-    restaurant: "Green Life Cafe",
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
-    cuisine: "Healthy",
-    dietSafe: ["Vegan", "Gluten-free"],
-    price: "$$",
-    eta: "18 min",
-    distance: "1.2 mi",
-    calories: "~420 cal",
-    totalPrice: "$15.00",
-    why: "Low calorie, matches dietary preferences",
-  },
-];
+type Restaurant = {
+  id: number;
+  name: string;
+  restaurant: string;
+  image: string;
+  cuisine: string;
+  dietSafe: string[];
+  price: string;
+  eta: string;
+  distance: string;
+  calories: string;
+  totalPrice: string;
+  why: string;
+};
 
 const Discover = () => {
   const { user, initializing } = useAuth();
   const navigate = useNavigate();
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [likedRestaurant, setLikedRestaurant] = useState<typeof mockRestaurants[0] | null>(null);
+  const [likedRestaurant, setLikedRestaurant] = useState<Restaurant | null>(null);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -70,7 +41,7 @@ const Discover = () => {
     }
   }, [user, initializing, navigate]);
 
-  // Check if user needs to complete onboarding
+  // Check if user needs to complete onboarding and load recommendations
   useEffect(() => {
     const checkOnboarding = async () => {
       if (user) {
@@ -82,14 +53,73 @@ const Discover = () => {
 
         if (!profile?.onboarding_completed) {
           navigate("/onboarding/name", { replace: true });
+          return;
         }
       }
+      
+      // Load recommendations after onboarding check
+      await loadRecommendations();
     };
 
     checkOnboarding();
   }, [user, navigate]);
 
-  const currentRestaurant = mockRestaurants[currentIndex];
+  const loadRecommendations = async () => {
+    setIsLoading(true);
+    try {
+      // Get user preferences from localStorage and profile
+      const cuisineProfile = localStorage.getItem("cuisineProfile");
+      const allergies = JSON.parse(localStorage.getItem("userAllergies") || "[]");
+      const diningContext = localStorage.getItem("diningContext") || "casual";
+      const priority = localStorage.getItem("priority") || "comfort";
+      const constraints = JSON.parse(localStorage.getItem("constraints") || "{}");
+
+      let cuisineVariety = "";
+      if (cuisineProfile) {
+        try {
+          const parsed = JSON.parse(cuisineProfile);
+          cuisineVariety = parsed.cuisine_variety || "";
+        } catch (e) {
+          console.error("Error parsing cuisine profile:", e);
+        }
+      }
+
+      const preferences = {
+        cuisineVariety,
+        allergies,
+        diningContext,
+        priority,
+        budget: constraints.budget || 50,
+        travelTime: constraints.travelTime || 30,
+        vegan: constraints.vegan || false,
+        constraints
+      };
+
+      console.log("Loading recommendations with preferences:", preferences);
+
+      const { data, error } = await supabase.functions.invoke("generate-recommendations", {
+        body: { preferences, count: 10 }
+      });
+
+      if (error) throw error;
+
+      if (data?.recommendations && data.recommendations.length > 0) {
+        setRestaurants(data.recommendations);
+        console.log("Loaded recommendations:", data.recommendations);
+      } else {
+        toast.error("No recommendations found. Using sample data.");
+        setRestaurants([]);
+      }
+    } catch (error) {
+      console.error("Failed to load recommendations:", error);
+      toast.error("Failed to load recommendations. Please try again.");
+      setRestaurants([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const currentRestaurant = restaurants[currentIndex];
 
   const handleSwipe = async (direction: "left" | "right" | "up") => {
     if (direction === "right") {
@@ -142,10 +172,12 @@ const Discover = () => {
     }
 
     setTimeout(() => {
-      if (currentIndex < mockRestaurants.length - 1) {
+      if (currentIndex < restaurants.length - 1) {
         setCurrentIndex(currentIndex + 1);
         setShowDetails(false);
       } else {
+        // Reload recommendations when we reach the end
+        loadRecommendations();
         setCurrentIndex(0);
       }
     }, 300);
@@ -154,14 +186,29 @@ const Discover = () => {
   const handleKeepSwiping = () => {
     setShowCelebration(false);
     setTimeout(() => {
-      if (currentIndex < mockRestaurants.length - 1) {
+      if (currentIndex < restaurants.length - 1) {
         setCurrentIndex(currentIndex + 1);
         setShowDetails(false);
       } else {
+        // Reload recommendations when we reach the end
+        loadRecommendations();
         setCurrentIndex(0);
       }
     }, 300);
   };
+
+  // Show loading state
+  if (isLoading || !currentRestaurant) {
+    return (
+      <div className="min-h-screen hexagon-pattern flex flex-col items-center justify-center p-4">
+        <BackButton />
+        <div className="text-center space-y-4">
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto" />
+          <p className="text-foreground/70">Finding perfect meals for you...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen hexagon-pattern flex flex-col items-center justify-center p-4">
@@ -358,7 +405,7 @@ const Discover = () => {
 
         {/* Counter */}
         <p className="text-center mt-6 text-sm text-foreground/60">
-          {currentIndex + 1} of {mockRestaurants.length}
+          {currentIndex + 1} of {restaurants.length}
         </p>
       </div>
     </div>
