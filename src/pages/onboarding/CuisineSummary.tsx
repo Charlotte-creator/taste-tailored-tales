@@ -58,7 +58,7 @@ const CuisineSummary = () => {
       if (error) throw error;
 
       toast.success("Profile saved successfully!");
-      navigate("/onboarding/setup-complete");
+      navigate("/home");
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Failed to save profile");
