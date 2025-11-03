@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,7 +16,11 @@ const passwordSchema = z
   .min(6, "Password must be at least 6 characters long");
 
 export default function Auth() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  // Get mode from URL parameter, default to signup
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode") === "signin" ? "signin" : "signup";
+  
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");

@@ -32,7 +32,7 @@ const Welcome = () => {
             variant="dark" 
             size="lg" 
             className="w-full"
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate('/auth?mode=signup')}
           >
             Get Started
           </Button>
@@ -41,7 +41,7 @@ const Welcome = () => {
             variant="light" 
             size="lg" 
             className="w-full"
-            onClick={() => navigate('/auth')}
+            onClick={() => navigate('/auth?mode=signin')}
           >
             Log In
           </Button>
