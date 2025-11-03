@@ -271,6 +271,14 @@ const Discover = () => {
               >
                 KEEP SWIPING
               </Button>
+              <Button 
+                variant="ghost"
+                size="lg"
+                className="w-full max-w-sm text-foreground/60 hover:text-foreground font-semibold"
+                onClick={() => navigate('/home')}
+              >
+                GO TO HOME
+              </Button>
             </div>
           </div>
         </div>
