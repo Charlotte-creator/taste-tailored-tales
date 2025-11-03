@@ -7,10 +7,54 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 const ThinkingProcess = () => {
-  const [analysis, setAnalysis] = useState("");
-  const [tasteProfile, setTasteProfile] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  const extractKeywords = (profileData: any, preferences: any): string[] => {
+    const words: string[] = [];
+    
+    // Extract from cuisine variety
+    if (profileData?.cuisine_variety) {
+      const cuisineText = profileData.cuisine_variety.toLowerCase();
+      if (cuisineText.includes("american")) words.push("American Cuisine");
+      if (cuisineText.includes("italian")) words.push("Italian");
+      if (cuisineText.includes("mexican")) words.push("Mexican");
+      if (cuisineText.includes("burger")) words.push("Burgers");
+      if (cuisineText.includes("salad")) words.push("Fresh Salads");
+      if (cuisineText.includes("comfort")) words.push("Comfort Food");
+    }
+
+    // Extract from allergies
+    if (preferences.allergies?.length > 0) {
+      preferences.allergies.forEach((allergy: string) => {
+        words.push(`${allergy}-Free`);
+      });
+    }
+
+    // Extract from dining context
+    if (preferences.diningContext) {
+      words.push(`${preferences.diningContext.charAt(0).toUpperCase() + preferences.diningContext.slice(1)} Dining`);
+    }
+
+    // Extract from priority
+    if (preferences.priority) {
+      words.push(preferences.priority.charAt(0).toUpperCase() + preferences.priority.slice(1));
+    }
+
+    // Extract from constraints
+    if (preferences.travelTime) {
+      words.push(`${preferences.travelTime}min Travel`);
+    }
+    if (preferences.budget) {
+      words.push(`$${preferences.budget} Budget`);
+    }
+    if (preferences.vegan) {
+      words.push("Vegan");
+    }
+
+    return words;
+  };
 
   useEffect(() => {
     analyzePreferences();
@@ -57,8 +101,6 @@ const ThinkingProcess = () => {
         if (profileData.nutrition_balance && profileData.cuisine_variety && profileData.suggestions) {
           localStorage.setItem("cuisineProfile", JSON.stringify(profileData));
           console.log("Profile saved to localStorage:", profileData);
-          // Set taste profile summary for display
-          setTasteProfile(`Your taste profile shows ${profileData.cuisine_variety.toLowerCase()}`);
         } else {
           console.error("Profile data incomplete:", profileData);
           throw new Error("Received incomplete profile data from AI");
@@ -77,25 +119,14 @@ const ThinkingProcess = () => {
 
       console.log("Analyzing preferences:", preferences);
 
-      const { data, error } = await supabase.functions.invoke("analyze-preferences", {
-        body: { preferences },
-      });
-
-      if (error) {
-        console.error("Error analyzing preferences:", error);
-        throw error;
-      }
-
-      if (data?.analysis) {
-        setAnalysis(data.analysis);
-      } else {
-        throw new Error("No analysis returned");
-      }
+      // Extract keywords from profile and preferences
+      const extractedKeywords = extractKeywords(profileData, preferences);
+      setKeywords(extractedKeywords);
     } catch (error) {
       console.error("Failed to analyze preferences:", error);
       toast.error("Failed to analyze your preferences. Proceeding with defaults.");
-      // Fallback analysis
-      setAnalysis("Based on your preferences, we'll find the perfect dining options for you. Let's discover some amazing meals!");
+      // Fallback keywords
+      setKeywords(["Comfort Food", "Casual Dining", "Budget-Friendly"]);
     } finally {
       setIsLoading(false);
     }
@@ -138,21 +169,14 @@ const ThinkingProcess = () => {
                   </h3>
                 </div>
                 
-                <div className="space-y-3">
-                  {tasteProfile && (
-                    <div className="flex items-start gap-3">
-                      <span className="text-primary text-lg flex-shrink-0">•</span>
-                      <p className="text-foreground/80 leading-relaxed font-medium">
-                        {tasteProfile}
-                      </p>
-                    </div>
-                  )}
-                  {analysis.split('\n').filter(line => line.trim()).map((line, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <span className="text-primary text-lg flex-shrink-0">•</span>
-                      <p className="text-foreground/80 leading-relaxed">
-                        {line.replace(/^[•\-\*]\s*/, '')}
-                      </p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  {keywords.map((keyword, i) => (
+                    <div
+                      key={i}
+                      className="px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-[hsl(var(--crumble-dark))] font-medium animate-in fade-in"
+                      style={{ animationDelay: `${i * 50}ms` }}
+                    >
+                      {keyword}
                     </div>
                   ))}
                 </div>
