@@ -42,26 +42,30 @@ const CuisineSummary = () => {
   }, []);
 
   const handleConfirm = async () => {
-    if (!user) return;
-    
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          nutrition_balance: nutritionBalance,
-          cuisine_variety: cuisineVariety,
-          suggestions: suggestions
-        })
-        .eq("id", user.id);
+      // Only save to database if user is authenticated
+      if (user) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            nutrition_balance: nutritionBalance,
+            cuisine_variety: cuisineVariety,
+            suggestions: suggestions
+          })
+          .eq("id", user.id);
 
-      if (error) throw error;
-
-      toast.success("Profile saved successfully!");
+        if (error) throw error;
+        toast.success("Profile saved successfully!");
+      }
+      
+      // Navigate to home regardless of auth status
       navigate("/home");
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Failed to save profile");
+      // Still navigate even if save fails
+      navigate("/home");
     } finally {
       setIsSaving(false);
     }
