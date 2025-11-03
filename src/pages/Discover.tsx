@@ -33,6 +33,9 @@ const Discover = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [likedRestaurant, setLikedRestaurant] = useState<Restaurant | null>(null);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -197,6 +200,39 @@ const Discover = () => {
     }, 300);
   };
 
+  const handleDragStart = (clientX: number, clientY: number) => {
+    setDragStart({ x: clientX, y: clientY });
+    setIsDragging(true);
+  };
+
+  const handleDragMove = (clientX: number, clientY: number) => {
+    if (!dragStart) return;
+    const deltaX = clientX - dragStart.x;
+    const deltaY = clientY - dragStart.y;
+    setDragOffset({ x: deltaX, y: deltaY });
+  };
+
+  const handleDragEnd = () => {
+    if (!dragStart) return;
+    
+    const swipeThreshold = 100;
+    const { x, y } = dragOffset;
+    
+    if (Math.abs(x) > swipeThreshold) {
+      if (x > 0) {
+        handleSwipe("right");
+      } else {
+        handleSwipe("left");
+      }
+    } else if (y < -swipeThreshold) {
+      handleSwipe("up");
+    }
+    
+    setDragStart(null);
+    setDragOffset({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
   // Show loading state
   if (isLoading || !currentRestaurant) {
     return (
@@ -296,7 +332,20 @@ const Discover = () => {
         </div>
 
         {/* Food Card */}
-        <Card className="overflow-hidden shadow-2xl border-2 border-border mb-6">
+        <Card 
+          className="overflow-hidden shadow-2xl border-2 border-border mb-6 cursor-grab active:cursor-grabbing transition-transform"
+          style={{
+            transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotate(${dragOffset.x * 0.1}deg)`,
+            transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+          }}
+          onMouseDown={(e) => handleDragStart(e.clientX, e.clientY)}
+          onMouseMove={(e) => isDragging && handleDragMove(e.clientX, e.clientY)}
+          onMouseUp={handleDragEnd}
+          onMouseLeave={handleDragEnd}
+          onTouchStart={(e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY)}
+          onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+          onTouchEnd={handleDragEnd}
+        >
           {/* Image */}
           <div className="relative h-80">
             <img
