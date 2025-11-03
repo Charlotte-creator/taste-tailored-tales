@@ -51,7 +51,8 @@ const CuisineSummary = () => {
           .update({
             nutrition_balance: nutritionBalance,
             cuisine_variety: cuisineVariety,
-            suggestions: suggestions
+            suggestions: suggestions,
+            onboarding_completed: true
           })
           .eq("id", user.id);
 
