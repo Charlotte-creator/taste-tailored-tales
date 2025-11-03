@@ -34,6 +34,8 @@ const CookAtHome = () => {
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [extractedIngredients, setExtractedIngredients] = useState<string[]>([]);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState("");
 
   useEffect(() => {
     document.title = "What's in Your Kitchen?";
@@ -268,11 +270,53 @@ const CookAtHome = () => {
                             variant="secondary"
                             className="px-3 py-2 text-sm flex items-center gap-2 bg-white hover:bg-gray-50 transition-colors"
                           >
-                            {ingredient}
+                            {editingIndex === index ? (
+                              <input
+                                type="text"
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.currentTarget.value)}
+                                onBlur={() => {
+                                  if (editingValue.trim()) {
+                                    const updated = [...extractedIngredients];
+                                    updated[index] = editingValue.trim();
+                                    setExtractedIngredients(updated);
+                                  }
+                                  setEditingIndex(null);
+                                  setEditingValue("");
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    if (editingValue.trim()) {
+                                      const updated = [...extractedIngredients];
+                                      updated[index] = editingValue.trim();
+                                      setExtractedIngredients(updated);
+                                    }
+                                    setEditingIndex(null);
+                                    setEditingValue("");
+                                  } else if (e.key === 'Escape') {
+                                    setEditingIndex(null);
+                                    setEditingValue("");
+                                  }
+                                }}
+                                autoFocus
+                                className="bg-transparent border-none outline-none focus:outline-none w-full min-w-[100px]"
+                              />
+                            ) : (
+                              <span 
+                                onClick={() => {
+                                  setEditingIndex(index);
+                                  setEditingValue(ingredient);
+                                }}
+                                className="cursor-pointer"
+                              >
+                                {ingredient}
+                              </span>
+                            )}
                             <button
                               onClick={() => {
                                 const updated = extractedIngredients.filter((_, i) => i !== index);
                                 setExtractedIngredients(updated);
+                                setEditingIndex(null);
                               }}
                               className="ml-1 hover:text-destructive transition-colors"
                             >
