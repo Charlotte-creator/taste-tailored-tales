@@ -16,6 +16,7 @@ import Constraints from "./pages/onboarding/Constraints";
 import CookAtHome from "./pages/onboarding/CookAtHome";
 import Home from "./pages/Home";
 import Discover from "./pages/Discover";
+import Profile from "./pages/Profile";
 import ThinkingProcess from "./pages/onboarding/ThinkingProcess";
 import AnalyzingTaste from "./pages/onboarding/AnalyzingTaste";
 import Auth from "./pages/Auth";
@@ -45,6 +46,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/home" element={<Home />} />
           <Route path="/discover" element={<Discover />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
