@@ -385,7 +385,7 @@ const Home = () => {
         {activeTab === "profile" && (
           <div className="space-y-6 animate-in fade-in duration-300">
             {/* User Header */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-4">
               <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
                 <span className="text-2xl font-bold text-white">
                   {userName ? userName[0].toUpperCase() : "U"}
@@ -398,6 +398,26 @@ const Home = () => {
                 <p className="text-foreground/70">Welcome back!</p>
               </div>
             </div>
+
+            {/* Quick Link to Full Profile */}
+            <Card className="p-4 bg-gradient-to-br from-primary/10 to-accent/10 border-2 border-primary/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-[hsl(var(--crumble-dark))]">Taste Profile</h3>
+                    <p className="text-sm text-foreground/60">View & edit your favorite foods</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="dark" 
+                  size="sm"
+                  onClick={() => navigate("/profile")}
+                >
+                  View Profile
+                </Button>
+              </div>
+            </Card>
 
             {/* Stats Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
