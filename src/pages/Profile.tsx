@@ -154,7 +154,8 @@ const Profile = () => {
     setIsRegenerating(true);
     try {
       const foodImages = foods.filter(f => f.image).map(f => f.image);
-      const allergies = localStorage.getItem("userAllergies") || "";
+      const allergiesStr = localStorage.getItem("userAllergies");
+      const allergies = allergiesStr ? JSON.parse(allergiesStr) : [];
 
       const { data, error } = await supabase.functions.invoke("generate-taste-profile", {
         body: { foodImages, allergies }
